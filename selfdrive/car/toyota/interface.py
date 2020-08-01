@@ -208,7 +208,7 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.indi.outerLoopGain = 15.0
       ret.lateralTuning.indi.timeConstant = 5.5
       ret.lateralTuning.indi.actuatorEffectiveness = 5.5
-      ret.steerActuatorDelay = 0.57
+      ret.steerActuatorDelay = 0.5
 
     elif candidate in [CAR.LEXUS_ES_TSS2, CAR.LEXUS_ESH_TSS2]:
       stop_and_go = True
