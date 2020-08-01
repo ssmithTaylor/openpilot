@@ -207,7 +207,7 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.indi.innerLoopGain = 6.0
       ret.lateralTuning.indi.outerLoopGain = 15.0
       ret.lateralTuning.indi.timeConstant = 6.5
-      ret.lateralTuning.indi.actuatorEffectiveness = 5.5
+      ret.lateralTuning.indi.actuatorEffectiveness = 6.0
       ret.steerActuatorDelay = 0.6
 
     elif candidate in [CAR.LEXUS_ES_TSS2, CAR.LEXUS_ESH_TSS2]:
