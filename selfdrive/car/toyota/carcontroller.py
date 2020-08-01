@@ -56,7 +56,7 @@ class CarController():
 
     # gas and brake
 
-    apply_gas = clip(actuators.gas, 0., 0.75)
+    apply_gas = clip(actuators.gas, 0., 0.42)
 
     if CS.CP.enableGasInterceptor:
       # send only negative accel if interceptor is detected. otherwise, send the regular value
