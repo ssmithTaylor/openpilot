@@ -111,6 +111,8 @@ class Uploader():
   def get_upload_sort(self, name):
     if name in self.immediate_priority:
       return self.immediate_priority[name]
+    if name in self.medium_priority:
+      return self.medium_priority[name] + 50
     if name in self.high_priority:
       return self.high_priority[name] + 100
     return 1000
