@@ -105,7 +105,8 @@ class Uploader():
     self.last_exc = None
 
     self.immediate_priority = {"qlog.bz2": 0, "qcamera.ts": 1}
-    self.high_priority = {"rlog.bz2": 0, "fcamera.hevc": 1, "dcamera.hevc": 2}
+    self.medium_priority = {"rlog.bz2": 0}
+    self.high_priority = {"fcamera.hevc": 0, "dcamera.hevc": 1}
 
   def get_upload_sort(self, name):
     if name in self.immediate_priority:
@@ -147,8 +148,13 @@ class Uploader():
       if name in self.immediate_priority:
         return (key, fn)
 
+    # upload the full log files after immediate files, even on 3G
+    for name, key, fn in upload_files:
+      if name in self.medium_priority:
+        return (key, fn)
+
     if with_raw:
-      # then upload the full log files, rear and front camera files
+      # then, rear and front camera files
       for name, key, fn in upload_files:
         if name in self.high_priority:
           return (key, fn)
@@ -250,7 +256,7 @@ def uploader_fn(exit_event):
     allow_raw_upload = (params.get("IsUploadRawEnabled") != b"0")
     on_hotspot = is_on_hotspot()
     on_wifi = is_on_wifi()
-    should_upload = on_wifi and not on_hotspot
+    should_upload = on_wifi or on_hotspot
 
     if exit_event.is_set():
       return
