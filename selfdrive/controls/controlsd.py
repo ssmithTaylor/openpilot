@@ -12,7 +12,7 @@ from selfdrive.config import Conversions as CV
 from selfdrive.boardd.boardd import can_list_to_can_capnp
 from selfdrive.car.car_helpers import get_car, get_startup_event
 from selfdrive.controls.lib.lane_planner import CAMERA_OFFSET
-from selfdrive.controls.lib.drive_helpers import update_v_cruise, initialize_v_cruise
+from selfdrive.controls.lib.drive_helpers import update_v_cruise, initialize_v_cruise, offset_v_cruise
 from selfdrive.controls.lib.longcontrol import LongControl, STARTING_TARGET_SPEED
 from selfdrive.controls.lib.latcontrol_pid import LatControlPID
 from selfdrive.controls.lib.latcontrol_indi import LatControlINDI
@@ -275,6 +275,8 @@ class Controls:
       self.v_cruise_kph = update_v_cruise(self.v_cruise_kph, CS.buttonEvents, self.enabled)
     elif self.CP.enableCruise and CS.cruiseState.enabled:
       self.v_cruise_kph = CS.cruiseState.speed * CV.MS_TO_KPH
+
+    self.v_cruise_kph = offset_v_cruise(self.v_cruise_kph, self.v_cruise_kph_last)
 
     # decrease the soft disable timer at every step, as it's reset on
     # entrance in SOFT_DISABLING state

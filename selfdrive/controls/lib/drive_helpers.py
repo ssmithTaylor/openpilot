@@ -8,6 +8,8 @@ V_CRUISE_MIN = 8
 V_CRUISE_DELTA = 8
 V_CRUISE_ENABLE_MIN = 40
 
+CRUISE_SPEED_OFFSET = 7 * CV.MPH_TO_KPH
+
 
 class MPC_COST_LAT:
   PATH = 1.0
@@ -52,3 +54,9 @@ def initialize_v_cruise(v_ego, buttonEvents, v_cruise_last):
       return v_cruise_last
 
   return int(round(clip(v_ego * CV.MS_TO_KPH, V_CRUISE_ENABLE_MIN, V_CRUISE_MAX)))
+
+def offset_v_cruise(v_cruise, last_cruise):
+  if v_cruise != last_cruise:
+    return int(round(clip(v_cruise - CRUISE_SPEED_OFFSET, V_CRUISE_MIN, V_CRUISE_MAX)))
+
+  return v_cruise
