@@ -85,6 +85,8 @@ class LongControl():
 
     v_ego_pid = max(CS.vEgo, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
 
+    coasting = False
+
     if self.long_control_state == LongCtrlState.off:
       self.v_pid = v_ego_pid
       self.pid.reset()
@@ -92,6 +94,8 @@ class LongControl():
 
     # tracking objects and driving
     elif self.long_control_state == LongCtrlState.pid:
+      coasting = not has_lead and v_target < CS.vEgo
+
       self.v_pid = v_target
       self.pid.pos_limit = gas_max
       self.pid.neg_limit = - brake_max
@@ -101,10 +105,11 @@ class LongControl():
       prevent_overshoot = not CP.stoppingControl and CS.vEgo < 1.5 and v_target_future < 0.7
       deadzone = interp(v_ego_pid, CP.longitudinalTuning.deadzoneBP, CP.longitudinalTuning.deadzoneV)
 
-      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
+      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot or coasting)
 
-      if not has_lead and v_target < CS.vEgo:
-        output_gb = 0.0
+      if coasting:
+        self.pid.reset()
+        output_gb = 0.
 
       if prevent_overshoot:
         output_gb = min(output_gb, 0.0)
