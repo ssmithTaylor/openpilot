@@ -104,7 +104,7 @@ class LongControl():
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
 
       if not has_lead and v_target < CS.vEgo:
-        output_gb = max(output_gb, 0.0)
+        output_gb = 0.0
 
       if prevent_overshoot:
         output_gb = min(output_gb, 0.0)
