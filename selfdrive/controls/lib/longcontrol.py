@@ -105,11 +105,10 @@ class LongControl():
       prevent_overshoot = not CP.stoppingControl and CS.vEgo < 1.5 and v_target_future < 0.7
       deadzone = interp(v_ego_pid, CP.longitudinalTuning.deadzoneBP, CP.longitudinalTuning.deadzoneV)
 
-      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot or coasting)
+      output_gb = self.pid.update(CS.vEgo if coasting else self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot or coasting)
 
       if coasting:
         self.pid.reset()
-        output_gb = 0.
 
       if prevent_overshoot:
         output_gb = min(output_gb, 0.0)
