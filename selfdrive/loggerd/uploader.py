@@ -106,7 +106,7 @@ class Uploader():
 
     self.immediate_priority = {"qlog.bz2": 0, "qcamera.ts": 1}
     self.medium_priority = {"rlog.bz2": 0}
-    self.high_priority = {"fcamera.hevc": 1, "dcamera.hevc": 0}
+    self.high_priority = {"dcamera.hevc": 0, "fcamera.hevc": 1}
 
   def get_upload_sort(self, name):
     if name in self.immediate_priority:
