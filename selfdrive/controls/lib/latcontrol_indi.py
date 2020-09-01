@@ -3,7 +3,8 @@ import numpy as np
 
 from cereal import log
 from common.realtime import DT_CTRL
-from common.numpy_fast import clip
+from common.numpy_fast import clip, interp
+from common.op_params import opParams
 from selfdrive.car.toyota.values import SteerLimitParams
 from selfdrive.car import apply_toyota_steer_torque_limits
 from selfdrive.controls.lib.drive_helpers import get_steer_max
@@ -34,11 +35,8 @@ class LatControlINDI():
 
     self.enforce_rate_limit = CP.carName == "toyota"
 
-    self.RC = CP.lateralTuning.indi.timeConstant
-    self.G = CP.lateralTuning.indi.actuatorEffectiveness
-    self.outer_loop_gain = CP.lateralTuning.indi.outerLoopGain
-    self.inner_loop_gain = CP.lateralTuning.indi.innerLoopGain
-    self.alpha = 1. - DT_CTRL / (self.RC + DT_CTRL)
+    self.gBP = [0, 34]
+    self.op_params = opParams()
 
     self.sat_count_rate = 1.0 * DT_CTRL
     self.sat_limit = CP.steerLimitTimer
@@ -63,6 +61,13 @@ class LatControlINDI():
     return self.sat_count > self.sat_limit
 
   def update(self, active, CS, CP, path_plan):
+    self.gV = [self.op_params.get('indi_actuator_low'), self.op_params.get('indi_actuator_high')]
+    self.G = interp(CS.vEgo, self.gBP, self.gV)
+    self.outer_loop_gain = self.op_params.get('indi_outer_gain')
+    self.inner_loop_gain = self.op_params.get('indi_inner_gain')
+    self.RC = self.op_params.get('indi_time_constant')
+    self.alpha = 1. - DT_CTRL / (self.RC + DT_CTRL)
+
     # Update Kalman filter
     y = np.matrix([[math.radians(CS.steeringAngle)], [math.radians(CS.steeringRate)]])
     self.x = np.dot(self.A_K, self.x) + np.dot(self.K, y)
