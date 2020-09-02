@@ -58,6 +58,7 @@ apks
 openpilot-apks
 
 .coverage*
+!.coveragerc-app
 coverage.xml
 htmlcov
 pandaextra
