@@ -12,8 +12,6 @@ COPY SConstruct \
 
 COPY ./pyextra /tmp/openpilot/pyextra
 COPY ./phonelibs /tmp/openpilot/phonelibs
-COPY ./laika /tmp/openpilot/laika
-COPY ./laika_repo /tmp/openpilot/laika_repo
 COPY ./rednose /tmp/openpilot/rednose
 COPY ./tools /tmp/openpilot/tools
 COPY ./release /tmp/openpilot/release

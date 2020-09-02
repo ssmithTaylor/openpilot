@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
   while 1:
     fpkt = messaging.recv_one(frame)
-    if fpkt is None or len(fpkt.frame.image) == 0:
+    if len(fpkt.frame.image) == 0:
       continue
     sm.update(timeout=1)
     rgb_img_raw = fpkt.frame.image
