@@ -26,6 +26,11 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: true
+        ref: master
+    - name: Cherry pick commits
+      run: |
+        git log --cherry master...r2-tests --format="%h" --reverse | tail -n +2 | git cherry-pick --stdin -X ours --allow-empty --keep-redundant-commits
+        echo git log -1
     - name: Strip non-release files
       run: |
         mkdir $TEST_DIR
