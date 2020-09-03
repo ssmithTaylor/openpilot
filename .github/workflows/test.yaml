@@ -29,6 +29,7 @@ jobs:
         ref: master
     - name: Cherry pick commits
       run: |
+        git fetch r2-tests
         git log --cherry master...r2-tests --format="%h" --reverse | tail -n +2 | git cherry-pick --stdin -X ours --allow-empty --keep-redundant-commits
         echo git log -1
     - name: Strip non-release files
