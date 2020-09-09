@@ -23,4 +23,5 @@ try:
     pm.send('radarState', dat_radar)
     time.sleep(1 / 100)  # continually send, rate doesn't matter
 except KeyboardInterrupt:
-  [p.send_signal(signal.SIGINT) for p in started_procs]
+  for p in started_procs:
+    p.send_signal(signal.SIGINT)
