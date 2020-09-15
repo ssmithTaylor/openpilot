@@ -6,6 +6,7 @@ on:
   - cron: '0 * * * *'
 
 env:
+  SYNC: rsync -av --checksum --exclude=".git*" $BUILD_FILES/ ./
   RUN: docker run --shm-size 1G --rm tmppilot /bin/sh -c
   UNIT_TEST: coverage run --append -m unittest discover
   BUILD: |
@@ -31,7 +32,7 @@ jobs:
     - name: Strip non-release files
       run: |
         mkdir $TEST_DIR
-        rsync -av --checksum --exclude=".git*" $BUILD_FILES/ ./
+        eval $SYNC
         cp -pR --parents $(cat release/files_common) $TEST_DIR
         cp Dockerfile.openpilot $TEST_DIR
         # need this to build on x86
@@ -56,9 +57,16 @@ jobs:
     runs-on: ubuntu-16.04
     timeout-minutes: 50
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout release files
+        uses: actions/checkout@v2
+      - name: Checkout build files
+        uses: actions/checkout@v2
         with:
-          submodules: true
+          repository: jamcar23/op_build_files
+          path: op_build_files
+      - name: Sync build files
+        run : |
+          eval $SYNC
       - name: Build Docker image
         run: eval "$BUILD"
       - name: pre-commit
