@@ -32,7 +32,7 @@ jobs:
     - name: Strip non-release files
       run: |
         mkdir $TEST_DIR
-        eval $SYNC
+        eval "$SYNC"
         cp -pR --parents $(cat release/files_common) $TEST_DIR
         cp Dockerfile.openpilot $TEST_DIR
         # need this to build on x86
@@ -66,7 +66,7 @@ jobs:
           path: op_build_files
       - name: Sync build files
         run : |
-          eval $SYNC
+          eval "$SYNC"
       - name: Build Docker image
         run: eval "$BUILD"
       - name: pre-commit
