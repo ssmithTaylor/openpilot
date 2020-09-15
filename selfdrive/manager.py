@@ -602,8 +602,10 @@ if __name__ == "__main__":
     if exit_status == 'reset':
       for _ in range(2):
         try:
-          subprocess.check_output(["git", "pull"], cwd=BASEDIR)
+          subprocess.check_output(["git", "stash"], cwd=BASEDIR)
           subprocess.check_output(["git", "reset", "--hard", "@{u}"], cwd=BASEDIR)
+          subprocess.check_output(["git", "fetch"], cwd=BASEDIR)
+          subprocess.check_output(["git", "checkout", "r2+"], cwd=BASEDIR)
           print('git reset successful!')
           break
         except subprocess.CalledProcessError as e:
