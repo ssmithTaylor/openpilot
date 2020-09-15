@@ -81,6 +81,8 @@ jobs:
           cp $BUILD_FILES/Pipfile.lock $TEST_DIR/Pipfile.lock
           rsync -av --checksum --exclude=".git*" --exclude="$BUILD_FILES" --exclude="$TEST_DIR" ./ $TEST_DIR/
           cd $TEST_DIR
-          curl https://pre-commit.com/install-local.py | python -
+          python -m pip install --upgrade pip
+          pip install pre-commit
           ls -aR
-          git init && git add -A && pre-commit run --all
+          git init && git add -A
+          pre-commit run --all
