@@ -1,0 +1,73 @@
+name: openpilot build
+on:
+  push:
+  pull_request:
+  schedule:
+  - cron: '0 * * * *'
+
+env:
+  BUILD_FILES: op_build_files
+  SYNC: rsync -av --checksum --exclude=".git*" $BUILD_FILES/ ./
+  RUN: docker run --shm-size 1G --rm tmppilot /bin/sh -c
+  UNIT_TEST: coverage run --append -m unittest discover
+  BUILD: |
+      docker pull $(grep -ioP '(?<=^from)\s+\S+' Dockerfile.openpilot) || true
+      docker pull docker.io/commaai/openpilotci:latest || true
+      docker build --cache-from docker.io/commaai/openpilotci:latest -t tmppilot -f Dockerfile.openpilot .
+jobs:
+  build_release:
+    name: build release
+    runs-on: ubuntu-16.04
+    timeout-minutes: 50
+    env:
+      TEST_DIR: tmppilot
+    steps:
+    - name: Checkout release files
+      uses: actions/checkout@v2
+    - name: Checkout build files
+      uses: actions/checkout@v2
+      with:
+        repository: jamcar23/op_build_files
+        path: op_build_files
+    - name: Strip non-release files
+      run: |
+        mkdir $TEST_DIR
+        eval "$SYNC"
+        cp -pR --parents $(cat release/files_common) $TEST_DIR
+        cp Dockerfile.openpilot $TEST_DIR
+        # need this to build on x86
+        cp -pR --parents phonelibs/libyuv phonelibs/snpe \
+                         external/bin selfdrive/modeld/runners $TEST_DIR
+        # need these so docker copy won't fail
+        cp Pipfile Pipfile.lock .pylintrc \
+          .coveragerc-app .pre-commit-config.yaml $TEST_DIR
+        cd $TEST_DIR
+        mkdir laika laika_repo tools
+        ls -R
+    - name: Build Docker image
+      run: cd $TEST_DIR && eval "$BUILD"
+    - name: Build openpilot and run quick check
+      run: |
+          $RUN "cd /tmp/openpilot && \
+                scons -j$(nproc) && \
+                $UNIT_TEST selfdrive/car"
+
+  static_analysis:
+    name: static analysis
+    runs-on: ubuntu-16.04
+    timeout-minutes: 50
+    steps:
+      - name: Checkout release files
+        uses: actions/checkout@v2
+      - name: Checkout build files
+        uses: actions/checkout@v2
+        with:
+          repository: jamcar23/op_build_files
+          path: op_build_files
+      - name: Sync build files
+        run : |
+          eval "$SYNC"
+      - name: Build Docker image
+        run: eval "$BUILD"
+      - name: pre-commit
+        run: $RUN "cd /tmp/openpilot/ && git init && git add -A && pre-commit run --all"
