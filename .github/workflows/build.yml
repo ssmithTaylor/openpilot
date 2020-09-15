@@ -77,7 +77,11 @@ jobs:
           cp $BUILD_FILES/.pre-commit-config.yaml $TEST_DIR/.pre-commit-config.yaml
           cp $BUILD_FILES/.pylintrc $TEST_DIR/.pylintrc
           cp $BUILD_FILES/mypy.ini $TEST_DIR/mypr.ini
+          cp $BUILD_FILES/Pipfile $TEST_DIR/Pipfile
+          cp $BUILD_FILES/Pipfile.lock $TEST_DIR/Pipfile.lock
           rsync -av --checksum --exclude=".git*" --exclude="$BUILD_FILES" --exclude="$TEST_DIR" ./ $TEST_DIR/
           cd $TEST_DIR
+          pip install pipenv==2018.11.26
+          pipenv install
           ls -aR
           git init && git add -A && pre-commit run --all
