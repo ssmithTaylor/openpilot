@@ -60,9 +60,9 @@ class TestUploader(UploaderTestCase):
     keys += [f"{self.seg_format.format(i)}/rlog.bz2" for i in seg1]
     keys += [f"{self.seg_format2.format(i)}/rlog.bz2" for i in seg2]
     for i in seg1:
-      keys += [f"{self.seg_format.format(i)}/{f}" for f in ['fcamera.hevc', 'dcamera.hevc']]
+      keys += [f"{self.seg_format.format(i)}/{f}" for f in ['dcamera.hevc', 'fcamera.hevc']]
     for i in seg2:
-      keys += [f"{self.seg_format2.format(i)}/{f}" for f in ['fcamera.hevc', 'dcamera.hevc']]
+      keys += [f"{self.seg_format2.format(i)}/{f}" for f in ['dcamera.hevc', 'fcamera.hevc']]
     keys += [f"{self.seg_format.format(i)}/bootlog.bz2" for i in seg1]
     keys += [f"{self.seg_format2.format(i)}/bootlog.bz2" for i in seg2]
     return keys
