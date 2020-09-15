@@ -81,7 +81,6 @@ jobs:
           cp $BUILD_FILES/Pipfile.lock $TEST_DIR/Pipfile.lock
           rsync -av --checksum --exclude=".git*" --exclude="$BUILD_FILES" --exclude="$TEST_DIR" ./ $TEST_DIR/
           cd $TEST_DIR
-          pip install pipenv==2018.11.26
-          pipenv install
+          pip install pip==19.2.3 git+git://github.com/pypa/pipenv.git@7a12dbb5cacc71d1dd2d74d8cce8eb50ce2db121; pipenv install --dev --deploy --system
           ls -aR
           git init && git add -A && pre-commit run --all
