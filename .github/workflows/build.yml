@@ -70,4 +70,6 @@ jobs:
       - name: Build Docker image
         run: eval "$BUILD"
       - name: pre-commit
-        run: $RUN "cd /tmp/openpilot/ && ls -R && git init && git add -A && pre-commit run --all"
+        run: $RUN "cd /tmp/openpilot/ && \ 
+          scons -j$(nproc) && ls -R && \ 
+          git init && git add -A && pre-commit run --all"
