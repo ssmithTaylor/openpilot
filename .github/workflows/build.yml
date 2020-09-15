@@ -56,6 +56,8 @@ jobs:
     name: static analysis
     runs-on: ubuntu-16.04
     timeout-minutes: 50
+    env:
+      TEST_DIR: tmppilot
     steps:
       - name: Checkout release files
         uses: actions/checkout@v2
@@ -64,12 +66,18 @@ jobs:
         with:
           repository: jamcar23/op_build_files
           path: op_build_files
-      - name: Sync build files
-        run : |
-          eval "$SYNC"
-      - name: Build Docker image
-        run: eval "$BUILD"
+      # - name: Sync build files
+      #   run : |
+      #     eval "$SYNC"
+      # - name: Build Docker image
+      #   run: eval "$BUILD"
       - name: pre-commit
-        run: $RUN "cd /tmp/openpilot/ && \ 
-          scons -j$(nproc) && ls -R && \ 
-          git init && git add -A && pre-commit run --all"
+        run: |
+          mkdir $TEST_DIR
+          cp $BUILD_FILES/.pre-commit-config.yaml $TEST_DIR/.pre-commit-config.yaml
+          cp $BUILD_FILES/.pylintrc $TEST_DIR/.pylintrc
+          cp $BUILD_FILES/mypy.ini $TEST_DIR/mypr.ini
+          rsync -av --checksum --exclude=".git*" --exclude="$BUILD_FILES" ./ $TEST_DIR/
+          cd $TEST_DIR
+          ls -aR
+          git init && git add -A && pre-commit run --all
