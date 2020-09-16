@@ -55,19 +55,36 @@ jobs:
     name: github push prebuilt
     runs-on: ubuntu-16.04
     timeout-minutes: 50
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push' && github.repository == 'jamcar23/openpilot'
+    if: github.ref == 'refs/heads/src' && github.event_name == 'push' && github.repository == 'jamcar23/openpilot'
     needs: [build_release, static_analysis, unit_tests]
+    env:
+      BRANCH: r2-ci-tests
+      TARGET_DIR: tmp_op_ci
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - name: Build Docker image
-        run: echo "RUN cd /tmp/openpilot && scons -c && scons -j3" >> Dockerfile.openpilot && eval "$BUILD"
-      - name: Push to github
+      - name: Prepare release files
         run: |
-          docker login -u wmelching -p ${{ secrets.COMMA_DOCKERHUB_TOKEN}}
-          docker tag tmppilot docker.io/commaai/openpilot:latest
-          docker push docker.io/commaai/openpilot:latest
+          mkdir "$TARGET_DIR"
+          cp -pR --parents $(cat release/files_common) "$TARGET_DIR"
+          cd "$TARGET_DIR"
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin https://github.com/jamcar23/openpilot.git
+          git checkout --orphan "$BRANCH"
+          git add -A
+          git commit -am "release: $(date +%s)"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ env.BRANCH }}
+          directory: ${{ env.TARGET_DIR }}
+          force: true
+
 
   static_analysis:
     name: static analysis
