@@ -35,7 +35,6 @@ class LatControlINDI():
 
     self.enforce_rate_limit = CP.carName == "toyota"
 
-    self.gBP = [0, 34]
     self.op_params = opParams()
 
     self.sat_count_rate = 1.0 * DT_CTRL
@@ -61,8 +60,7 @@ class LatControlINDI():
     return self.sat_count > self.sat_limit
 
   def update(self, active, CS, CP, path_plan):
-    self.gV = [self.op_params.get('indi_actuator_low'), self.op_params.get('indi_actuator_high')]
-    self.G = interp(CS.vEgo, self.gBP, self.gV)
+    self.G = self.op_params.get('indi_actuator_effectiveness')
     self.outer_loop_gain = self.op_params.get('indi_outer_gain')
     self.inner_loop_gain = self.op_params.get('indi_inner_gain')
     self.RC = self.op_params.get('indi_time_constant')

@@ -65,8 +65,7 @@ class opParams:
                         'indi_inner_gain': Param(6.0, float, live=True),
                         'indi_outer_gain': Param(15.0, float, live=True),
                         'indi_time_constant': Param(5.5, float, live=True),
-                        'indi_actuator_low': Param(6.0, float, live=True),
-                        'indi_actuator_high': Param(6.0, float, live=True),
+                        'indi_actuator_effectiveness': Param(6.0, float, live=True),
                         'steer_actuator_delay': Param(0.57, float, live=True)}
 
     self._params_file = '/data/op_params.json'
