@@ -17,10 +17,8 @@ class ValueTypes:
   number = [float, int]
   none_or_number = [type(None), float, int]
 
-VT = ValueTypes()
-
 class Param:
-  def __init__(self, default=None, allowed_types=VT.number, description=None, live=False, hidden=False):
+  def __init__(self, default, allowed_types, description=None, live=False, hidden=False):
     self.default = default
     if not isinstance(allowed_types, list):
       allowed_types = [allowed_types]
@@ -61,6 +59,7 @@ class opParams:
       self.fork_params = {'camera_offset': Param(default=0.06, allowed_types=VT.number)}  # VT.number allows both floats and ints
     """
 
+    VT = ValueTypes()
     self.fork_params = {'camera_offset': Param(0.06, VT.number, 'Your camera offset to use in lane_planner.py', live=True),
                         'indi_inner_gain': Param(6.0, float, live=True),
                         'indi_outer_gain': Param(15.0, float, live=True),
