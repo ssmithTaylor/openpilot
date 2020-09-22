@@ -68,6 +68,7 @@ jobs:
         run: |
           mkdir "$TARGET_DIR"
           cp -pR --parents $(cat release/files_common) "$TARGET_DIR"
+          cp -pR --parents phonelibs/ "$TARGET_DIR/phonelibs/"
           cd "$TARGET_DIR"
           git init
           git config user.name "github-actions[bot]"
