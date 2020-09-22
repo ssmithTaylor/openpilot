@@ -97,8 +97,8 @@ class opParams:
       to_write = True  # user's first time running a fork with op_params, write default params
 
     if to_write:
-      self._write()
-      os.chmod(self._params_file, 0o764)
+      if self._write():
+        os.chmod(self._params_file, 0o764)
 
   def get(self, key=None, force_live=False):  # any params you try to get MUST be in fork_params
     param_info = self.param_info(key)
@@ -184,5 +184,7 @@ class opParams:
       try:
         with open(self._params_file, "w") as f:
           f.write(json.dumps(self.params, indent=2))  # can further speed it up by remove indentation but makes file hard to read
+        return True
       except Exception as e:
         print("Unable to write file: " + str(e))
+        return False
