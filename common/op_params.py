@@ -174,7 +174,7 @@ class opParams:
           self.params = json.loads(f.read())
         return True
       except Exception as e:
-        print("Unable to read file: " + e)
+        print("Unable to read file: " + str(e))
         return False
     else:
       return False
@@ -185,4 +185,4 @@ class opParams:
         with open(self._params_file, "w") as f:
           f.write(json.dumps(self.params, indent=2))  # can further speed it up by remove indentation but makes file hard to read
       except Exception as e:
-        print("Unable to write file: " + e)
+        print("Unable to write file: " + str(e))
