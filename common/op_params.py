@@ -168,15 +168,18 @@ class opParams:
           self._last_read_time = sec_since_boot()
 
   def _read(self):
-    try:
-      with open(self._params_file, "r") as f:
-        self.params = json.loads(f.read())
-      return True
-    except Exception as e:
-      print("Unable to open file: " + e)
+    if os.path.isfile(self._params_file):
+      try:
+        with open(self._params_file, "r") as f:
+          self.params = json.loads(f.read())
+        return True
+      except Exception as e:
+        print("Unable to open file: " + e)
+        return False
+    else:
       return False
 
   def _write(self):
-    if not travis:
+    if not travis or os.path.isdir("/data/"):
       with open(self._params_file, "w") as f:
         f.write(json.dumps(self.params, indent=2))  # can further speed it up by remove indentation but makes file hard to read
