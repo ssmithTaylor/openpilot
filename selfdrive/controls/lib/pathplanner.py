@@ -115,7 +115,7 @@ class PathPlanner():
       self.lane_change_state = LaneChangeState.off
       self.lane_change_direction = LaneChangeDirection.none
     else:
-      torque_applied = not self.alca_nudge_required or (sm['carState'].steeringPressed and \
+      torque_applied = not self.alca_nudge_required or (sm['carState'].steeringPressed and 
                        ((sm['carState'].steeringTorque > 0 and self.lane_change_direction == LaneChangeDirection.left) or
                         (sm['carState'].steeringTorque < 0 and self.lane_change_direction == LaneChangeDirection.right)))
 
