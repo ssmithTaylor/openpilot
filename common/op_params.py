@@ -65,7 +65,10 @@ class opParams:
                         'indi_outer_gain': Param(15.0, float, live=True),
                         'indi_time_constant': Param(5.5, float, live=True),
                         'indi_actuator_effectiveness': Param(6.0, float, live=True),
-                        'steer_actuator_delay': Param(0.57, float, live=True)}
+                        'steer_actuator_delay': Param(0.57, float, live=True),
+                        'alca_nudge_required': Param(False, bool, 'Whether to wait for applied torque to the wheel (nudge) before making lane changes. '
+                                                                 'If False, lane change will occur IMMEDIATELY after signaling'),
+                        'alca_min_speed': Param(20.0, VT.number, 'The minimum speed allowed for an automatic lane change (in MPH)')}
 
     self._params_file = '/data/op_params.json'
     self._backup_file = '/data/op_params_corrupt.json'
