@@ -58,7 +58,7 @@ jobs:
     if: github.ref == 'refs/heads/src' && github.event_name == 'push' && github.repository == 'jamcar23/openpilot'
     needs: [build_release, static_analysis, unit_tests]
     env:
-      BRANCH: r2-ci-tests
+      BRANCH: r2++
       TARGET_DIR: tmp_op_ci
     steps:
       - uses: actions/checkout@v2
