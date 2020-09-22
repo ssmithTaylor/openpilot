@@ -3,6 +3,7 @@ import numpy as np
 
 from cereal import log
 from common.realtime import DT_CTRL
+from common.numpy_fast import clip
 from common.op_params import opParams
 from selfdrive.car.toyota.values import SteerLimitParams
 from selfdrive.car import apply_toyota_steer_torque_limits
