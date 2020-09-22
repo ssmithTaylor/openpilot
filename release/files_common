@@ -1,3 +1,7 @@
+op_edit.py
+common/colors.py
+common/op_params.py
+
 .gitignore
 LICENSE
 launch.sh
