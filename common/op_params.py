@@ -174,12 +174,15 @@ class opParams:
           self.params = json.loads(f.read())
         return True
       except Exception as e:
-        print("Unable to open file: " + e)
+        print("Unable to read file: " + e)
         return False
     else:
       return False
 
   def _write(self):
     if not travis or os.path.isdir("/data/"):
-      with open(self._params_file, "w") as f:
-        f.write(json.dumps(self.params, indent=2))  # can further speed it up by remove indentation but makes file hard to read
+      try:
+        with open(self._params_file, "w") as f:
+          f.write(json.dumps(self.params, indent=2))  # can further speed it up by remove indentation but makes file hard to read
+      except Exception as e:
+        print("Unable to write file: " + e)
