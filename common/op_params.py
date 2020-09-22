@@ -173,7 +173,7 @@ class opParams:
         self.params = json.loads(f.read())
       return True
     except Exception as e:
-      error(e)
+      print("Unable to open file: " + e)
       return False
 
   def _write(self):
