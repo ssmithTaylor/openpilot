@@ -34,8 +34,8 @@ class Colors:
 COLORS = Colors()
 
 def opParams_warning(msg):
-  print('{}opParams WARNING: {}{}'.format(Colors.WARNING, msg, Colors.ENDC))
+  print('{}opParams WARNING: {}{}'.format(COLORS.WARNING, msg, COLORS.ENDC))
 
 
 def opParams_error(msg):
-  print('{}opParams ERROR: {}{}'.format(Colors.FAIL, msg, Colors.ENDC))
+  print('{}opParams ERROR: {}{}'.format(COLORS.FAIL, msg, COLORS.ENDC))
