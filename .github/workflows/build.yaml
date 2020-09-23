@@ -70,8 +70,10 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.7
-      - name: Install pre-commit
-        run: pip install pre-commit
+      - name: Install python packages
+        run: pip install pre-commit pylint
+      - name: Install cppcheck
+        run: sudo apt-get install -y cppcheck
       - name: Prepare release files
         run: |
           chmod +x release/build_release_ci.sh

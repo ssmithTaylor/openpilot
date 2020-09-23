@@ -299,7 +299,7 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
     dat = dat.strip()
     try:
       dat = ast.literal_eval(dat)
-    except:
+    except Exception:
       if dat.lower() == 'none':
         dat = None
       elif dat.lower() == 'false':

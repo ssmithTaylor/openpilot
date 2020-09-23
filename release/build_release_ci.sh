@@ -23,5 +23,5 @@ git remote add origin https://github.com/jamcar23/openpilot.git
 git checkout --orphan "$BRANCH"
 git add -A
 
-cp ../.pre-commit-config.yaml .pre-commit-config.yaml
+cp ../{.pre-commit-config.yaml,.pylintrc,mypy.ini} ./
 pre-commit run --all && git commit -am "release: $VERSION"
