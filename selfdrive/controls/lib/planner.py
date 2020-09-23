@@ -7,6 +7,7 @@ from common.numpy_fast import interp
 import cereal.messaging as messaging
 from cereal import car
 from common.realtime import sec_since_boot
+from common.op_params import opParams
 from selfdrive.swaglog import cloudlog
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.speed_smoother import speed_smoother
@@ -38,6 +39,9 @@ _A_TOTAL_MAX_BP = [20., 40.]
 
 # 75th percentile
 SPEED_PERCENTILE_IDX = 7
+
+# brake at COAST_SPEED above set point
+COAST_SPEED = 10.0 * CV.MPH_TO_MS  # TODO: move this to op params
 
 
 def calc_cruise_accel_limits(v_ego, following):
@@ -88,6 +92,9 @@ class Planner():
     self.params = Params()
     self.first_loop = True
 
+    self.op_params = opParams()
+    self.coast_start = 0
+
   def choose_solution(self, v_cruise_setpoint, enabled):
     if enabled:
       solutions = {self.cruise_plan: self.v_cruise}
@@ -116,6 +123,7 @@ class Planner():
     """Gets called when new radarState is available"""
     cur_time = sec_since_boot()
     v_ego = sm['carState'].vEgo
+    a_ego = sm['carState'].aEgo
 
     long_control_state = sm['controlsState'].longControlState
     v_cruise_kph = sm['controlsState'].vCruise
@@ -141,7 +149,16 @@ class Planner():
         accel_limits_turns[1] = min(accel_limits_turns[1], AWARENESS_DECEL)
         accel_limits_turns[0] = min(accel_limits_turns[0], accel_limits_turns[1])
 
-      self.v_cruise, self.a_cruise = speed_smoother(self.v_acc_start, self.a_acc_start,
+      if self.op_params.get('enable_coasting'):
+        self.v_cruise, self.a_cruise = self.choose_cruise(CP.radarTimeStep,
+                                                          v_ego,
+                                                          a_ego,
+                                                          v_cruise_setpoint,
+                                                          accel_limits_turns,
+                                                          jerk_limits,
+                                                          cur_time)
+      else:
+        self.v_cruise, self.a_cruise = speed_smoother(self.v_acc_start, self.a_acc_start,
                                                     v_cruise_setpoint,
                                                     accel_limits_turns[1], accel_limits_turns[0],
                                                     jerk_limits[1], jerk_limits[0],
@@ -151,7 +168,7 @@ class Planner():
       self.v_cruise = max(self.v_cruise, 0.)
     else:
       starting = long_control_state == LongCtrlState.starting
-      a_ego = min(sm['carState'].aEgo, 0.0)
+      a_ego = min(a_ego, 0.0)
       reset_speed = MIN_CAN_SPEED if starting else v_ego
       reset_accel = self.CP.startAccel if starting else a_ego
       self.v_acc = reset_speed
@@ -160,6 +177,7 @@ class Planner():
       self.a_acc_start = reset_accel
       self.v_cruise = reset_speed
       self.a_cruise = reset_accel
+      self.cruise_plan = LONG_PLAN_SOURCE.CRUISE_GAS
 
     self.mpc1.set_cur_state(self.v_acc_start, self.a_acc_start)
     self.mpc2.set_cur_state(self.v_acc_start, self.a_acc_start)
@@ -226,3 +244,44 @@ class Planner():
     self.a_acc_start = a_acc_sol
 
     self.first_loop = False
+  
+  def choose_cruise(self, dt, v_ego, a_ego, v_cruise_setpoint, accel_limits_turns, jerk_limits, cur_time):
+    # Gas to v_cruise_setpoint
+    v_gas, a_gas = speed_smoother(self.v_acc_start, self.a_acc_start,
+                                  v_cruise_setpoint,
+                                  accel_limits_turns[1], accel_limits_turns[0],
+                                  jerk_limits[1], jerk_limits[0],
+                                  LON_MPC_STEP)
+
+    # Coast
+    v_coast, a_coast = v_ego + a_ego * dt, a_ego
+
+    # Brake to (v_cruise_setpoint + COAST_SPEED)
+    # TODO: rethink this for toyota? v_cruise_setpoint has to be lower than 
+    # the car's setpoint or the car will engine brake on its own.
+    # In other words the max speed (with coasting) is the car's setpoint.
+    v_brake, a_brake = speed_smoother(self.v_acc_start, self.a_acc_start,
+                                      v_cruise_setpoint + COAST_SPEED,
+                                      accel_limits_turns[1], accel_limits_turns[0],
+                                      jerk_limits[1], jerk_limits[0],
+                                      LON_MPC_STEP)
+
+    # Debounce coasting
+    if self.coast_start == 0 or not (v_brake > v_coast and v_gas < v_coast):
+      self.coast_start = cur_time
+
+    # Select
+    if v_brake < v_coast and v_gas < v_coast:
+      self.cruise_plan = LONG_PLAN_SOURCE.CRUISE_BRAKE
+    elif v_brake > v_coast and v_gas > v_coast:
+      self.cruise_plan = LONG_PLAN_SOURCE.CRUISE_GAS
+    elif cur_time - self.coast_start > 0.1:
+      self.cruise_plan = LONG_PLAN_SOURCE.CRUISE_COAST
+
+    # Execute
+    if self.cruise_plan == LONG_PLAN_SOURCE.CRUISE_BRAKE:
+      return v_brake, a_brake
+    elif self.cruise_plan == LONG_PLAN_SOURCE.CRUISE_GAS:
+      return v_gas, a_gas
+    else:
+      return v_coast, a_coast
