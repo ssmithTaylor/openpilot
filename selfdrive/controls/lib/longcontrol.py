@@ -19,7 +19,6 @@ _MAX_SPEED_ERROR_V = [1.5, .8]  # max positive v_pid error VS actual speed; this
 
 RATE = 100.0
 
-
 def long_control_state_trans(active, long_control_state, v_ego, v_target, v_pid,
                              output_gb, brake_pressed, cruise_standstill):
   """Update longitudinal control state machine"""
@@ -128,3 +127,14 @@ class LongControl():
     final_brake = -clip(output_gb, -brake_max, 0.)
 
     return final_gas, final_brake
+
+
+class LongPlanSource:
+  def __init__(self):
+    self.MPC1 = 'mpc1'
+    self.MPC2 = 'mpc2'
+    self.CRUISE_GAS = 'cruise_gas'
+    self.CRUISE_BRAKE = 'cruise_brake'
+    self.CRUISE_COAST = 'cruise_coast'
+
+LONG_PLAN_SOURCE = LongPlanSource()

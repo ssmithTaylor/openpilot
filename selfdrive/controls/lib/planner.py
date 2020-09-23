@@ -10,7 +10,7 @@ from common.realtime import sec_since_boot
 from selfdrive.swaglog import cloudlog
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.speed_smoother import speed_smoother
-from selfdrive.controls.lib.longcontrol import LongCtrlState, MIN_CAN_SPEED
+from selfdrive.controls.lib.longcontrol import LongCtrlState, MIN_CAN_SPEED, LONG_PLAN_SOURCE
 from selfdrive.controls.lib.fcw import FCWChecker
 from selfdrive.controls.lib.long_mpc import LongitudinalMpc
 from selfdrive.controls.lib.drive_helpers import V_CRUISE_MAX
@@ -80,6 +80,8 @@ class Planner():
     self.a_cruise = 0.0
 
     self.longitudinalPlanSource = 'cruise'
+    self.cruise_plan = LONG_PLAN_SOURCE.CRUISE_GAS
+
     self.fcw_checker = FCWChecker()
     self.path_x = np.arange(192)
 
@@ -88,23 +90,23 @@ class Planner():
 
   def choose_solution(self, v_cruise_setpoint, enabled):
     if enabled:
-      solutions = {'cruise': self.v_cruise}
+      solutions = {self.cruise_plan: self.v_cruise}
       if self.mpc1.prev_lead_status:
-        solutions['mpc1'] = self.mpc1.v_mpc
+        solutions[LONG_PLAN_SOURCE.MPC1] = self.mpc1.v_mpc
       if self.mpc2.prev_lead_status:
-        solutions['mpc2'] = self.mpc2.v_mpc
+        solutions[LONG_PLAN_SOURCE.MPC2] = self.mpc2.v_mpc
 
       slowest = min(solutions, key=solutions.get)
 
       self.longitudinalPlanSource = slowest
       # Choose lowest of MPC and cruise
-      if slowest == 'mpc1':
+      if slowest == LONG_PLAN_SOURCE.MPC1:
         self.v_acc = self.mpc1.v_mpc
         self.a_acc = self.mpc1.a_mpc
-      elif slowest == 'mpc2':
+      elif slowest == LONG_PLAN_SOURCE.MPC2:
         self.v_acc = self.mpc2.v_mpc
         self.a_acc = self.mpc2.a_mpc
-      elif slowest == 'cruise':
+      elif slowest == self.cruise_plan:
         self.v_acc = self.v_cruise
         self.a_acc = self.a_cruise
 
