@@ -1,30 +1,26 @@
 #!/usr/bin/env bash
-set -e
 
-export GIT_COMMITTER_NAME="Vehicle Researcher"
-export GIT_COMMITTER_EMAIL="user@comma.ai"
-export GIT_AUTHOR_NAME="Vehicle Researcher"
-export GIT_AUTHOR_EMAIL="user@comma.ai"
+# TARGET_DIR="$1"
+# BRANCH="$2"
 
-SOURCE_DIR=$PWD
-TARGET_DIR=tmp_op_ci
+mkdir "$TARGET_DIR"
 
-BRANCH=r2-ci-tests
+cp -pR --parents $(cat release/files_common) "$TARGET_DIR"
+cp -pR --parents phonelibs/ "$TARGET_DIR/phonelibs/"
 
-mkdir $TARGET_DIR && cd $TARGET_DIR
+cd "$TARGET_DIR"
+
+mkdir -p panda/board/obj
+touch panda/board/obj/.placeholder
 
 git init
+git config user.name "github-actions[bot]"
+git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 git remote add origin https://github.com/jamcar23/openpilot.git
 git checkout --orphan "$BRANCH"
-
-find . -maxdepth 1 -not -path './.git' -not -name '.' -not -name '..' -exec rm -rf '{}' \;
-
-cd $SOURCE_DIR
-
-cp -pR --parents $(cat release/files_common) $TARGET_DIR/
-
-cd $TARGET_DIR
-
 git add -A
+
+cp ../.pre-commit-config.yaml .pre-commit-config.yaml
+pre-commit run --all
+
 git commit -am "release: $(date +%s)"
-#git push -uf origin "$BRANCH"
