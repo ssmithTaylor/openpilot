@@ -66,6 +66,12 @@ jobs:
         with:
           submodules: true
           lfs: true
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install pre-commit
+        run: pip install pre-commit
       - name: Prepare release files
         run: |
           chmod +x release/build_release_ci.sh
