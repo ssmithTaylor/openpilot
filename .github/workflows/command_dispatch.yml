@@ -11,4 +11,6 @@ jobs:
         with:
           token: ${{ secrets.REPO_PAT }}
           issue-type: pull-request
-          commands: release
+          commands: |
+            release
+            build
