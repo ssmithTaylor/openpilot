@@ -13,6 +13,9 @@ cd "$TARGET_DIR"
 mkdir -p panda/board/obj
 touch panda/board/obj/.placeholder
 
+VERSION="$(date +%y.%m.%d.%H%M)"
+echo "#define COMMA_VERSION \"$VERSION\"" > selfdrive/common/version.h
+
 git init
 git config user.name "github-actions[bot]"
 git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -23,4 +26,4 @@ git add -A
 cp ../.pre-commit-config.yaml .pre-commit-config.yaml
 pre-commit run --all
 
-git commit -am "release: $(date +%s)"
+git commit -am "release: $VERSION"
