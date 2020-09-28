@@ -71,7 +71,8 @@ class opParams:
                         'alca_min_speed': Param(20.0, VT.number, 'The minimum speed allowed for an automatic lane change (in MPH)'),
                         'enable_coasting': Param(False, bool, 'When true the car will try to coast down hills instead of braking.'),
                         'coast_speed': Param(10.0, float, 'The amount of speed to coast by before applying the brakes. Unit: MPH'), 
-                        'setpoint_offset': Param(0, int, 'The difference between the car\'s set cruise speed and OP\'s. Useful for toyotas when coasting. Unit: MPH')}
+                        'setpoint_offset': Param(0, int, 'The difference between the car\'s set cruise speed and OP\'s. Useful for toyotas when coasting. Unit: MPH'),
+                        'corolla_use_indi': Param(False, bool)}
 
     self._params_file = '/data/op_params.json'
     self._backup_file = '/data/op_params_corrupt.json'
