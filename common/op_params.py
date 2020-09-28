@@ -137,7 +137,7 @@ class opParams:
   def param_info(self, key):
     if key in self.fork_params:
       return self.fork_params[key]
-    return Param(None, None)
+    return Param(None, type(None))
 
   def _check_key_exists(self, key, met):
     if key not in self.fork_params or key not in self.params:
