@@ -69,7 +69,8 @@ class opParams:
                         'alca_nudge_required': Param(False, bool, 'Whether to wait for applied torque to the wheel (nudge) before making lane changes. '
                                                                  'If False, lane change will occur IMMEDIATELY after signaling'),
                         'alca_min_speed': Param(20.0, VT.number, 'The minimum speed allowed for an automatic lane change (in MPH)'),
-                        'enable_coasting': Param(False, bool)}
+                        'enable_coasting': Param(False, bool, 'When true the car will try to coast down hills instead of braking.'),
+                        'coast_speed': Param(10.0, float, 'The amount of speed to coast by before applying the brakes. Unit: MPH')}
 
     self._params_file = '/data/op_params.json'
     self._backup_file = '/data/op_params_corrupt.json'

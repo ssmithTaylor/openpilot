@@ -40,9 +40,6 @@ _A_TOTAL_MAX_BP = [20., 40.]
 # 75th percentile
 SPEED_PERCENTILE_IDX = 7
 
-# brake at COAST_SPEED above set point
-COAST_SPEED = 10.0 * CV.MPH_TO_MS  # TODO: move this to op params
-
 Source = log.Plan.longitudinalPlanSource
 
 
@@ -96,6 +93,7 @@ class Planner():
 
     self.op_params = opParams()
     self.enable_coasting = self.op_params.get('enable_coasting')
+    self.coast_speed = self.op_params.get('coast_speed') * CV.MPH_TO_MS
 
   def choose_solution(self, v_cruise_setpoint, enabled):
     if enabled:
@@ -275,7 +273,7 @@ class Planner():
     # the car's setpoint or the car will engine brake on its own.
     # In other words the max speed (with coasting) is the car's setpoint.
     v_brake, a_brake = speed_smoother(self.v_acc_start, self.a_acc_start,
-                                      v_cruise_setpoint + COAST_SPEED,
+                                      v_cruise_setpoint + self.coast_speed,
                                       accel_limits_turns[1], accel_limits_turns[0],
                                       jerk_limits[1], jerk_limits[0],
                                       LON_MPC_STEP)
