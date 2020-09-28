@@ -40,7 +40,7 @@ _A_TOTAL_MAX_BP = [20., 40.]
 # 75th percentile
 SPEED_PERCENTILE_IDX = 7
 
-Source = log.Plan.longitudinalPlanSource
+Source = log.Plan.LongitudinalPlanSource
 
 
 def calc_cruise_accel_limits(v_ego, following):
