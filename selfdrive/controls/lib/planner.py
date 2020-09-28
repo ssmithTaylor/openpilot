@@ -5,13 +5,13 @@ from common.params import Params
 from common.numpy_fast import interp
 
 import cereal.messaging as messaging
-from cereal import car
+from cereal import car, log
 from common.realtime import sec_since_boot
 from common.op_params import opParams
 from selfdrive.swaglog import cloudlog
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.speed_smoother import speed_smoother
-from selfdrive.controls.lib.longcontrol import LongCtrlState, MIN_CAN_SPEED, LONG_PLAN_SOURCE
+from selfdrive.controls.lib.longcontrol import LongCtrlState, MIN_CAN_SPEED
 from selfdrive.controls.lib.fcw import FCWChecker
 from selfdrive.controls.lib.long_mpc import LongitudinalMpc
 from selfdrive.controls.lib.drive_helpers import V_CRUISE_MAX
@@ -42,6 +42,8 @@ SPEED_PERCENTILE_IDX = 7
 
 # brake at COAST_SPEED above set point
 COAST_SPEED = 10.0 * CV.MPH_TO_MS  # TODO: move this to op params
+
+Source = log.Plan.longitudinalPlanSource
 
 
 def calc_cruise_accel_limits(v_ego, following):
@@ -83,8 +85,8 @@ class Planner():
     self.v_cruise = 0.0
     self.a_cruise = 0.0
 
-    self.longitudinalPlanSource = 'cruise'
-    self.cruise_plan = LONG_PLAN_SOURCE.CRUISE_GAS
+    self.longitudinalPlanSource = Source.cruiseGas
+    self.cruise_plan = Source.cruiseGas
 
     self.fcw_checker = FCWChecker()
     self.path_x = np.arange(192)
@@ -93,30 +95,29 @@ class Planner():
     self.first_loop = True
 
     self.op_params = opParams()
-    self.coast_start = 0
+    self.enable_coasting = self.op_params.get('enable_coasting')
 
   def choose_solution(self, v_cruise_setpoint, enabled):
     if enabled:
       solutions = {self.cruise_plan: self.v_cruise}
       if self.mpc1.prev_lead_status:
-        solutions[LONG_PLAN_SOURCE.MPC1] = self.mpc1.v_mpc
+        solutions[Source.mpc1] = self.mpc1.v_mpc
       if self.mpc2.prev_lead_status:
-        solutions[LONG_PLAN_SOURCE.MPC2] = self.mpc2.v_mpc
+        solutions[Source.mpc2] = self.mpc2.v_mpc
 
       slowest = min(solutions, key=solutions.get)
 
       self.longitudinalPlanSource = slowest
       # Choose lowest of MPC and cruise
-      if slowest == LONG_PLAN_SOURCE.MPC1:
+      if slowest == Source.mpc1:
         self.v_acc = self.mpc1.v_mpc
         self.a_acc = self.mpc1.a_mpc
-      elif slowest == LONG_PLAN_SOURCE.MPC2:
+      elif slowest == Source.mpc2:
         self.v_acc = self.mpc2.v_mpc
         self.a_acc = self.mpc2.a_mpc
       elif slowest == self.cruise_plan:
         self.v_acc = self.v_cruise
         self.a_acc = self.a_cruise
-        self.longitudinalPlanSource = 'cruise'
 
     self.v_acc_future = min([self.mpc1.v_mpc_future, self.mpc2.v_mpc_future, v_cruise_setpoint])
 
@@ -125,6 +126,7 @@ class Planner():
     cur_time = sec_since_boot()
     v_ego = sm['carState'].vEgo
     a_ego = sm['carState'].aEgo
+    gasbrake = sm['carControl'].actuators.gas - sm['carControl'].actuators.brake
 
     long_control_state = sm['controlsState'].longControlState
     v_cruise_kph = sm['controlsState'].vCruise
@@ -150,14 +152,13 @@ class Planner():
         accel_limits_turns[1] = min(accel_limits_turns[1], AWARENESS_DECEL)
         accel_limits_turns[0] = min(accel_limits_turns[0], accel_limits_turns[1])
 
-      if self.op_params.get('enable_coasting'):
-        self.v_cruise, self.a_cruise = self.choose_cruise(CP.radarTimeStep,
-                                                          v_ego,
+      if self.enable_coasting:
+        self.v_cruise, self.a_cruise = self.choose_cruise(v_ego,
                                                           a_ego,
                                                           v_cruise_setpoint,
                                                           accel_limits_turns,
                                                           jerk_limits,
-                                                          cur_time)
+                                                          gasbrake)
       else:
         self.v_cruise, self.a_cruise = speed_smoother(self.v_acc_start, self.a_acc_start,
                                                     v_cruise_setpoint,
@@ -178,7 +179,7 @@ class Planner():
       self.a_acc_start = reset_accel
       self.v_cruise = reset_speed
       self.a_cruise = reset_accel
-      self.cruise_plan = LONG_PLAN_SOURCE.CRUISE_GAS
+      self.cruise_plan = Source.cruiseGas
 
     self.mpc1.set_cur_state(self.v_acc_start, self.a_acc_start)
     self.mpc2.set_cur_state(self.v_acc_start, self.a_acc_start)
@@ -246,7 +247,20 @@ class Planner():
 
     self.first_loop = False
   
-  def choose_cruise(self, dt, v_ego, a_ego, v_cruise_setpoint, accel_limits_turns, jerk_limits, cur_time):
+  def choose_cruise(self, v_ego, a_ego, v_cruise_setpoint, accel_limits_turns, jerk_limits, gasbrake):
+    # When coasting, reset plans
+    if self.longitudinalPlanSource == Source.cruiseCoast:
+      self.v_acc_start = v_ego
+      self.a_acc_start = a_ego
+
+    # When following return to cruiseGas
+    if self.longitudinalPlanSource in [Source.mpc1, Source.mpc2]:
+      self.cruise_plan = Source.cruiseGas
+
+    # Coast continues current state
+    v_coast, a_coast = v_ego + a_ego * LON_MPC_STEP, a_ego
+    cruise = {Source.cruiseCoast: (v_coast, a_coast)}
+
     # Gas to v_cruise_setpoint
     v_gas, a_gas = speed_smoother(self.v_acc_start, self.a_acc_start,
                                   v_cruise_setpoint,
@@ -254,8 +268,7 @@ class Planner():
                                   jerk_limits[1], jerk_limits[0],
                                   LON_MPC_STEP)
 
-    # Coast
-    v_coast, a_coast = v_ego + a_ego * dt, a_ego
+    cruise[Source.cruiseGas] = (v_gas, a_gas)
 
     # Brake to (v_cruise_setpoint + COAST_SPEED)
     # TODO: rethink this for toyota? v_cruise_setpoint has to be lower than 
@@ -267,22 +280,15 @@ class Planner():
                                       jerk_limits[1], jerk_limits[0],
                                       LON_MPC_STEP)
 
-    # Debounce coasting
-    if self.coast_start == 0 or not (v_brake > v_coast and v_gas < v_coast):
-      self.coast_start = cur_time
+    cruise[Source.cruiseBrake] = (v_brake, a_brake)
 
-    # Select
-    if v_brake < v_coast and v_gas < v_coast:
-      self.cruise_plan = LONG_PLAN_SOURCE.CRUISE_BRAKE
-    elif v_brake > v_coast and v_gas > v_coast:
-      self.cruise_plan = LONG_PLAN_SOURCE.CRUISE_GAS
-    elif cur_time - self.coast_start > 0.1:
-      self.cruise_plan = LONG_PLAN_SOURCE.CRUISE_COAST
+    # Entry conditions
+    if gasbrake == 0:
+      if a_brake < a_coast:
+        self.cruise_plan = Source.cruiseBrake
+      elif a_gas > a_coast:
+        self.cruise_plan = Source.cruiseGas
+      elif (a_brake > a_coast > a_gas):
+        self.cruise_plan = Source.cruiseCoast
 
-    # Execute
-    if self.cruise_plan == LONG_PLAN_SOURCE.CRUISE_BRAKE:
-      return v_brake, a_brake
-    elif self.cruise_plan == LONG_PLAN_SOURCE.CRUISE_GAS:
-      return v_gas, a_gas
-    else:
-      return v_coast, a_coast
+    return cruise[self.cruise_plan]

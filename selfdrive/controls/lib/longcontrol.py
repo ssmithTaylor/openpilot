@@ -1,8 +1,10 @@
 from cereal import log
 from common.numpy_fast import clip, interp
 from selfdrive.controls.lib.pid import PIController
+from common.op_params import opParams
 
 LongCtrlState = log.ControlsState.LongControlState
+Source = log.Plan.LongitudinalPlanSource
 
 STOPPING_EGO_SPEED = 0.5
 MIN_CAN_SPEED = 0.3  # TODO: parametrize this in car interface
@@ -64,13 +66,15 @@ class LongControl():
                             convert=compute_gb)
     self.v_pid = 0.0
     self.last_output_gb = 0.0
+    self.opParams = opParams()
+    self.enable_coasting = self.opParams.get('enable_coasting')
 
   def reset(self, v_pid):
     """Reset PID controller and change setpoint"""
     self.pid.reset()
     self.v_pid = v_pid
 
-  def update(self, active, CS, v_target, v_target_future, a_target, CP):
+  def update(self, active, CS, v_target, v_target_future, a_target, CP, source):
     """Update longitudinal control. This updates the state machine and runs a PID loop"""
     # Actuation limits
     gas_max = interp(CS.vEgo, CP.gasMaxBP, CP.gasMaxV)
@@ -94,6 +98,16 @@ class LongControl():
       self.v_pid = v_target
       self.pid.pos_limit = gas_max
       self.pid.neg_limit = - brake_max
+
+      if self.enable_coasting:
+        no_gas = source in [Source.cruiseBrake, Source.cruiseCoast]
+        no_brake = source in [Source.cruiseGas, Source.cruiseCoast]
+        
+        if no_gas:
+          self.pid.pos_limit = 0.
+
+        if no_brake:
+          self.pid.neg_limit = 0.
 
       # Toyota starts braking more when it thinks you want to stop
       # Freeze the integrator so we don't accelerate to compensate, and don't allow positive acceleration
@@ -127,14 +141,3 @@ class LongControl():
     final_brake = -clip(output_gb, -brake_max, 0.)
 
     return final_gas, final_brake
-
-
-class LongPlanSource:
-  def __init__(self):
-    self.MPC1 = 'mpc1'
-    self.MPC2 = 'mpc2'
-    self.CRUISE_GAS = 'cruise_gas'
-    self.CRUISE_BRAKE = 'cruise_brake'
-    self.CRUISE_COAST = 'cruise_coast'
-
-LONG_PLAN_SOURCE = LongPlanSource()
