@@ -5,6 +5,7 @@ from selfdrive.car.toyota.values import Ecu, ECU_FINGERPRINT, CAR, TSS2_CAR, FIN
 from selfdrive.car import STD_CARGO_KG, scale_rot_inertia, scale_tire_stiffness, is_ecu_disconnected, gen_empty_fingerprint
 from selfdrive.swaglog import cloudlog
 from selfdrive.car.interfaces import CarInterfaceBase
+from common.op_params import opParams
 
 EventName = car.CarEvent.EventName
 
@@ -15,6 +16,7 @@ class CarInterface(CarInterfaceBase):
 
   @staticmethod
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), has_relay=False, car_fw=[]):  # pylint: disable=dangerous-default-value
+    op = opParams()
     ret = CarInterfaceBase.get_std_params(candidate, fingerprint, has_relay)
 
     ret.carName = "toyota"
@@ -23,7 +25,7 @@ class CarInterface(CarInterfaceBase):
     ret.steerActuatorDelay = 0.12  # Default delay, Prius has larger delay
     ret.steerLimitTimer = 0.4
 
-    if candidate not in [CAR.PRIUS, CAR.RAV4, CAR.RAV4H, CAR.COROLLA_TSS2, CAR.COROLLAH_TSS2]:  # These cars use LQR/INDI
+    if candidate not in [CAR.PRIUS, CAR.RAV4, CAR.RAV4H]:  # These cars use LQR/INDI
       ret.lateralTuning.init('pid')
       ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
 
@@ -198,17 +200,20 @@ class CarInterface(CarInterfaceBase):
       ret.safetyParam = 73
       ret.wheelbase = 2.63906
       ret.steerRatio = 15.33
-      tire_stiffness_factor = 0.996  # not optimized yet
       ret.mass = 3060. * CV.LB_TO_KG + STD_CARGO_KG
-      #ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.6], [0.1]]
-      #ret.lateralTuning.pid.kf = 0.00007818594
 
-      ret.lateralTuning.init('indi')
-      ret.lateralTuning.indi.innerLoopGain = 6.0
-      ret.lateralTuning.indi.outerLoopGain = 15.0
-      ret.lateralTuning.indi.timeConstant = 5.5
-      ret.lateralTuning.indi.actuatorEffectiveness = 6.0
-      ret.steerActuatorDelay = 0.6
+      if op.get('corolla_use_indi'):
+        ret.lateralTuning.init('indi')
+        ret.lateralTuning.indi.innerLoopGain = 6.0
+        ret.lateralTuning.indi.outerLoopGain = 15.0
+        ret.lateralTuning.indi.timeConstant = 5.5
+        ret.lateralTuning.indi.actuatorEffectiveness = 6.0
+        ret.steerActuatorDelay = 0.6
+        tire_stiffness_factor = 0.996
+      else:
+        ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.6], [0.1]]
+        ret.lateralTuning.pid.kf = 0.00007818594
+        tire_stiffness_factor = 0.444
 
     elif candidate in [CAR.LEXUS_ES_TSS2, CAR.LEXUS_ESH_TSS2]:
       stop_and_go = True
