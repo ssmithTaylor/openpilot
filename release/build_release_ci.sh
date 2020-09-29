@@ -13,6 +13,8 @@ cd "$TARGET_DIR"
 mkdir -p panda/board/obj
 touch panda/board/obj/.placeholder
 
+mv .gitignore .gi.bak
+
 VERSION="$(date +%y.%m.%d.%H%M)"
 echo "#define COMMA_VERSION \"$VERSION\"" > selfdrive/common/version.h
 
@@ -27,3 +29,8 @@ cp ../.pre-commit-config.yaml .pre-commit-config.yaml
 pre-commit run --all
 
 git commit -am "release: $VERSION"
+
+mv .gi.bak .gitignore
+
+git add -A 
+git commit -a --amend --no-edit
