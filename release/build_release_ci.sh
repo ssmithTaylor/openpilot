@@ -6,13 +6,13 @@
 mkdir "$TARGET_DIR"
 
 cp -pR --parents $(cat release/files_common) "$TARGET_DIR"
-cp -pR --parents phonelibs/ "$TARGET_DIR/phonelibs/"
 
 cd "$TARGET_DIR"
 
 mkdir -p panda/board/obj
 touch panda/board/obj/.placeholder
-
+ls -a panda/board
+ls -a panda/board/obj
 echo "!board/obj/.placeholder" >> panda/.gitignore
 
 VERSION="$(date +%y.%m.%d.%H%M)"
