@@ -67,5 +67,10 @@ flycheck_*
 
 cppcheck_report.txt
 
+panda/dist/
+panda/pandacan.egg-info/
+panda/examples/output.csv
+panda/nosetest.xml
+
 !board/obj/.placeholder
 !phonelibs/*/lib/*.a
