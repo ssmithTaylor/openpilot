@@ -66,3 +66,6 @@ pandaextra
 flycheck_*
 
 cppcheck_report.txt
+
+!board/obj/.placeholder
+!phonelibs/*/lib/*.a
