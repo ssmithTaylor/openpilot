@@ -119,7 +119,7 @@ class LongControl():
       if prevent_overshoot:
         output_gb = min(output_gb, 0.0)
 
-      if self.enable_coasting and source == Source.cruiseCoast and self.last_output_gb > 0.0:
+      if self.enable_coasting and no_gas and self.last_output_gb > 0.0:
         output_gb = -self.last_output_gb
 
     # Intention is to stop, switch to a different brake control until we stop

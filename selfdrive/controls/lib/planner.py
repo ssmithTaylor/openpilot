@@ -289,4 +289,8 @@ class Planner():
       elif (a_brake > a_coast > a_gas):
         self.cruise_plan = Source.cruiseCoast
 
+    cloudlog.info("Cruise Plan %s: ego(%f,%f) gas(%f,%f) coast(%f,%f) brake(%f,%f)", 
+                  self.cruise_plan, v_ego, a_ego, v_gas, a_gas, v_coast, a_coast, 
+                  v_brake, a_brake)
+
     return cruise[self.cruise_plan]
