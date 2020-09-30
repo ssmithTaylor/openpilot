@@ -73,4 +73,17 @@ panda/examples/output.csv
 panda/nosetest.xml
 
 !board/obj/.placeholder
-!phonelibs/*/lib/*.a
+!phonelibs/libgralloc/**
+!phonelibs/linux/**
+!phonelibs/opencl/**
+!phonelibs/zlib/*
+!phonelibs/bzip2/*
+!phonelibs/openmax/**
+!phonelibs/qpoases/**
+!phonelibs/libyuv/include/**
+!phonelibs/libyuv/lib/**
+!phonelibs/snpe/include/**
+!phonelibs/snpe/aarch64**
+!phonelibs/android_frameworks_native/**
+!phonelibs/android_hardware_libhardware/**
+!phonelibs/android_system_core/**
