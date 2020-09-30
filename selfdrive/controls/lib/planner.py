@@ -281,7 +281,7 @@ class Planner():
     cruise[Source.cruiseBrake] = (v_brake, a_brake)
 
     # Entry conditions
-    if gasbrake == 0:
+    if math.isclose(gasbrake, 0.0):
       if a_brake < a_coast:
         self.cruise_plan = Source.cruiseBrake
       elif a_gas > a_coast:
