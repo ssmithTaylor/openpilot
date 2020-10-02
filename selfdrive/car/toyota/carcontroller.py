@@ -6,6 +6,7 @@ from selfdrive.car.toyota.toyotacan import create_steer_command, create_ui_comma
                                            create_fcw_command
 from selfdrive.car.toyota.values import Ecu, CAR, STATIC_MSGS, SteerLimitParams
 from opendbc.can.packer import CANPacker
+from common.op_params import opParams
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
@@ -48,6 +49,7 @@ class CarController():
       self.fake_ecus.add(Ecu.dsu)
 
     self.packer = CANPacker(dbc_name)
+    self.opParams = opParams()
 
   def update(self, enabled, CS, frame, actuators, pcm_cancel_cmd, hud_alert,
              left_line, right_line, lead, left_lane_depart, right_lane_depart):
@@ -55,7 +57,7 @@ class CarController():
     # *** compute control surfaces ***
 
     # gas and brake
-
+    ACCEL_HYST_GAP = self.opParams.get('accel_hyst_gap')
     apply_gas = clip(actuators.gas, 0., 0.42)
 
     if CS.CP.enableGasInterceptor:

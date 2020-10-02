@@ -280,12 +280,14 @@ class Planner():
 
     cruise[Source.cruiseBrake] = (v_brake, a_brake)
 
+    accel_hyst_gap = self.op_params.get('accel_hyst_gap')
+
     # Entry conditions
-    if math.isclose(gasbrake, 0.0):
+    if math.isclose(gasbrake, 0.0) or (gasbrake <= accel_hyst_gap and gasbrake >= -accel_hyst_gap) :
       if a_brake < a_coast:
         self.cruise_plan = Source.cruiseBrake
       elif a_gas > a_coast:
-        self.cruise_plan = Source.cruiseGas
+        self.cruise_plan = Source.cruiseGas if v_gas < v_cruise_setpoint else Source.cruiseCoast
       elif (a_brake > a_coast > a_gas):
         self.cruise_plan = Source.cruiseCoast
 
