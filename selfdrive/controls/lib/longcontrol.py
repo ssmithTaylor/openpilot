@@ -119,6 +119,9 @@ class LongControl():
       if prevent_overshoot:
         output_gb = min(output_gb, 0.0)
 
+      if self.enable_coasting and no_gas and self.last_output_gb > 0.0:
+        output_gb = min(-self.last_output_gb, output_gb)
+
     # Intention is to stop, switch to a different brake control until we stop
     elif self.long_control_state == LongCtrlState.stopping:
       # Keep applying brakes until the car is stopped

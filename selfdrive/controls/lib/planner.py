@@ -94,6 +94,7 @@ class Planner():
     self.op_params = opParams()
     self.enable_coasting = self.op_params.get('enable_coasting')
     self.coast_speed = self.op_params.get('coast_speed') * CV.MPH_TO_MS
+    self.always_eval_coast = self.op_params.get('always_eval_coast_plan')
 
   def choose_solution(self, v_cruise_setpoint, enabled):
     if enabled:
@@ -280,13 +281,19 @@ class Planner():
 
     cruise[Source.cruiseBrake] = (v_brake, a_brake)
 
+    accel_hyst_gap = self.op_params.get('accel_hyst_gap')
+
     # Entry conditions
-    if gasbrake == 0:
+    if self.always_eval_coast or math.isclose(gasbrake, 0.0) or (gasbrake <= accel_hyst_gap and gasbrake >= -accel_hyst_gap) :
       if a_brake < a_coast:
         self.cruise_plan = Source.cruiseBrake
       elif a_gas > a_coast:
-        self.cruise_plan = Source.cruiseGas
+        self.cruise_plan = Source.cruiseGas if v_gas < v_cruise_setpoint else Source.cruiseCoast
       elif (a_brake > a_coast > a_gas):
         self.cruise_plan = Source.cruiseCoast
+
+    cloudlog.info("Cruise Plan %s: ego(%f,%f) gas(%f,%f) coast(%f,%f) brake(%f,%f)", 
+                  self.cruise_plan, v_ego, a_ego, v_gas, a_gas, v_coast, a_coast, 
+                  v_brake, a_brake)
 
     return cruise[self.cruise_plan]
