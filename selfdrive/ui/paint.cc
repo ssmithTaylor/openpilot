@@ -220,8 +220,7 @@ static void update_all_track_data(UIState *s) {
   }
 }
 
-
-static void ui_draw_track(UIState *s, bool is_mpc, track_vertices_data *pvd, const ::capnp::List<float>::Reader &p_poly) {
+static void ui_draw_track(UIState *s, bool is_mpc, track_vertices_data *pvd) {
  if (pvd->cnt == 0) return;
 
   nvgBeginPath(s->vg);
@@ -232,18 +231,15 @@ static void ui_draw_track(UIState *s, bool is_mpc, track_vertices_data *pvd, con
   nvgClosePath(s->vg);
 
   NVGpaint track_bg;
-  float dist = 1.8 * fmax(s->scene.controls_state.getVEgo(), 4.4704);  // eval car position at 1.8s from path (min 10 mph)
-  float lat_pos = std::abs((p_poly[0] * pow(dist, 3)) + (p_poly[1] * pow(dist, 2)) + (p_poly[2] * dist));  // don't include path offset
-  float hue = lat_pos * -39.46 + 148;  // interp from {0, 4.5} -> {148, 0}
   if (is_mpc) {
     // Draw colored MPC track
     const Color clr = bg_colors[s->status];
     track_bg = nvgLinearGradient(s->vg, s->fb_w, s->fb_h, s->fb_w, s->fb_h*.4,
       nvgRGBA(clr.r, clr.g, clr.b, 255), nvgRGBA(clr.r, clr.g, clr.b, 255/2));
   } else {
-    // Draw colored vision track
-    track_bg = nvgLinearGradient(s->vg, s->fb_w, s->fb_h*.9, s->fb_w, s->fb_h*.4,
-      nvgHSLA(hue / 360., .94, .51, 255), nvgHSLA(hue / 360., .73, .49, 100));
+    // Draw white vision track
+    track_bg = nvgLinearGradient(s->vg, s->fb_w, s->fb_h, s->fb_w, s->fb_h*.4,
+      COLOR_WHITE, COLOR_WHITE_ALPHA(0));
   }
   nvgFillPaint(s->vg, track_bg);
   nvgFill(s->vg);
@@ -316,12 +312,7 @@ static void update_all_lane_lines_data(UIState *s, const cereal::ModelData::Path
   update_lane_line_data(s, points, fmin(path.getStd(), 0.7), pstart + 1, path.getValidLen());
 }
 
-static void ui_draw_lane(UIState *s, const cereal::ModelData::PathData::Reader &path, model_path_vertices_data *pstart, float prob) {
-  float lane_pos = std::abs(path.getPoly()[3]);  // get redder when line is closer to car
-  float hue = 332.5 * lane_pos - 332.5;  // equivalent to {1.4, 1.0}: {133, 0} (green to red)
-  hue = fmin(133, fmax(0, hue)) / 360.;  // clip and normalize
-  NVGcolor color = nvgHSLA(hue, 0.73, 0.64, prob * 255);
-
+static void ui_draw_lane(UIState *s,  model_path_vertices_data *pstart, NVGcolor color) {
   ui_draw_lane_line(s, pstart, color);
   color.a /= 25;
   ui_draw_lane_line(s, pstart + 1, color);
@@ -336,26 +327,20 @@ static void ui_draw_vision_lanes(UIState *s) {
   }
 
   // Draw left lane edge
-  ui_draw_lane(
-      s, scene->model.getLeftLane(),
-      pvd,
-      scene->model.getLeftLane().getProb());
+  ui_draw_lane(s, pvd, nvgRGBAf(1.0, 1.0, 1.0, scene->model.getLeftLane().getProb()));
 
   // Draw right lane edge
-  ui_draw_lane(
-      s, scene->model.getRightLane(),
-      pvd + MODEL_LANE_PATH_CNT,
-      scene->model.getRightLane().getProb());
+  ui_draw_lane(s, pvd + MODEL_LANE_PATH_CNT, nvgRGBAf(1.0, 1.0, 1.0, scene->model.getRightLane().getProb()));
 
   if(s->sm->updated("radarState")) {
     update_all_track_data(s);
   }
 
   // Draw vision path
-  ui_draw_track(s, false, &s->track_vertices[0], scene->model.getPath().getPoly());
+  ui_draw_track(s, false, &s->track_vertices[0]);
   if (scene->controls_state.getEnabled()) {
     // Draw MPC path when engaged
-    ui_draw_track(s, true, &s->track_vertices[1], scene->model.getPath().getPoly());
+    ui_draw_track(s, true, &s->track_vertices[1]);
   }
 }
 
