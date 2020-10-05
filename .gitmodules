@@ -10,7 +10,7 @@
 [submodule "cereal"]
 	path = cereal
 	url = https://github.com/jamcar23/cereal.git
-	branch = src
+	branch = update-0.7.9
 [submodule "rednose_repo"]
 	path = rednose_repo
 	url = https://github.com/commaai/rednose.git
