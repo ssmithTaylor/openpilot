@@ -74,7 +74,9 @@ class opParams:
                         'setpoint_offset': Param(0, int, 'The difference between the car\'s set cruise speed and OP\'s. Useful for toyotas when coasting. Unit: MPH'),
                         'corolla_use_indi': Param(False, bool),
                         'accel_hyst_gap': Param(0.02, float, live=True),
-                        'always_eval_coast_plan': Param(False, bool)}
+                        'always_eval_coast_plan': Param(False, bool),
+                        'gas_max_bp': Param([0., 20, 33], [list, float]),
+                        'gas_max_v': Param([0.3, 0.2, 0.075], [list, float])}
 
     self._params_file = '/data/op_params.json'
     self._backup_file = '/data/op_params_corrupt.json'

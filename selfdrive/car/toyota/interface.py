@@ -16,7 +16,7 @@ class CarInterface(CarInterfaceBase):
 
   @staticmethod
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), has_relay=False, car_fw=[]):  # pylint: disable=dangerous-default-value
-    op = opParams()
+    op_params = opParams()
     ret = CarInterfaceBase.get_std_params(candidate, fingerprint, has_relay)
 
     ret.carName = "toyota"
@@ -202,7 +202,7 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatio = 15.33
       ret.mass = 3060. * CV.LB_TO_KG + STD_CARGO_KG
 
-      if op.get('corolla_use_indi'):
+      if op_params.get('corolla_use_indi'):
         ret.lateralTuning.init('indi')
         ret.lateralTuning.indi.innerLoopGain = 6.0
         ret.lateralTuning.indi.outerLoopGain = 15.0
@@ -303,13 +303,13 @@ class CarInterface(CarInterfaceBase):
     ret.longitudinalTuning.kiBP = [0., 35.]
 
     if ret.enableGasInterceptor:
-      ret.gasMaxBP = [0., 9., 35]
-      ret.gasMaxV = [0.2, 0.5, 0.7]
+      ret.gasMaxBP = op_params.get('gas_max_bp')
+      ret.gasMaxV = op_params.get('gas_max_v')
       ret.longitudinalTuning.kpV = [1.2, 0.8, 0.5]
       ret.longitudinalTuning.kiV = [0.18, 0.12]
     else:
-      ret.gasMaxBP = [0., 20, 33]
-      ret.gasMaxV = [0.3, 0.2, 0.075]
+      ret.gasMaxBP = op_params.get('gas_max_bp')
+      ret.gasMaxV = op_params.get('gas_max_v')
       ret.longitudinalTuning.kpV = [3.6, 2.4, 1.5]
       ret.longitudinalTuning.kiV = [0.54, 0.36]
 
