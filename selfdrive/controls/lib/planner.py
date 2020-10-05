@@ -94,6 +94,7 @@ class Planner():
     self.op_params = opParams()
     self.enable_coasting = self.op_params.get('enable_coasting')
     self.coast_speed = self.op_params.get('coast_speed') * CV.MPH_TO_MS
+    self.always_eval_coast = self.op_params.get('always_eval_coast_plan')
 
   def choose_solution(self, v_cruise_setpoint, enabled):
     if enabled:
@@ -283,7 +284,7 @@ class Planner():
     accel_hyst_gap = self.op_params.get('accel_hyst_gap')
 
     # Entry conditions
-    if math.isclose(gasbrake, 0.0) or (gasbrake <= accel_hyst_gap and gasbrake >= -accel_hyst_gap) :
+    if self.always_eval_coast or math.isclose(gasbrake, 0.0) or (gasbrake <= accel_hyst_gap and gasbrake >= -accel_hyst_gap) :
       if a_brake < a_coast:
         self.cruise_plan = Source.cruiseBrake
       elif a_gas > a_coast:
