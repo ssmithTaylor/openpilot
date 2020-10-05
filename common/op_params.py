@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import os
 import json
+import time
 from common.colors import opParams_error as error
 from common.colors import opParams_warning as warning
 try:
   from common.realtime import sec_since_boot
 except ImportError:
-  import time
   sec_since_boot = time.time
   warning("Using python time.time() instead of faster sec_since_boot")
 
@@ -80,6 +80,7 @@ class opParams:
     self._last_read_time = sec_since_boot()
     self.read_frequency = 2.5  # max frequency to read with self.get(...) (sec)
     self._to_delete = ['lane_hug_direction', 'lane_hug_angle_offset', 'prius_use_lqr']  # a list of params you want to delete (unused)
+    self._last_mod_time = 0.0
     self._run_init()  # restores, reads, and updates params
 
   def _run_init(self):  # does first time initializing of default params
@@ -178,9 +179,14 @@ class opParams:
   def _read(self):
     if os.path.isfile(self._params_file):
       try:
-        with open(self._params_file, "r") as f:
-          self.params = json.loads(f.read())
-        return True
+        mod_time = os.path.getmtime(self._params_file)
+        if mod_time > self._last_mod_time:
+          with open(self._params_file, "r") as f:
+            self.params = json.loads(f.read())
+          self._last_mod_time = mod_time
+          return True
+        else:
+          return False
       except Exception as e:
         print("Unable to read file: " + str(e))
         return False
