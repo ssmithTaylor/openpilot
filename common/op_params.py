@@ -39,8 +39,8 @@ class Param:
     self.is_list = list in self.allowed_types
     if self.has_allowed_types:
       assert type(self.default) in self.allowed_types, 'Default value type must be in specified allowed_types!'
-    if self.is_list:
-      self.allowed_types.remove(list)
+    # if self.is_list:
+    #   self.allowed_types.remove(list)
 
 
 class opParams:
