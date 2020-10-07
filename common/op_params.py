@@ -76,7 +76,17 @@ class opParams:
                         'accel_hyst_gap': Param(0.02, float, live=True),
                         'always_eval_coast_plan': Param(False, bool),
                         'gas_max_bp': Param([0., 20, 33], [list, float]),
-                        'gas_max_v': Param([0.3, 0.2, 0.075], [list, float])}
+                        'gas_max_v': Param([0.3, 0.2, 0.075], [list, float]),
+                        'indi_use_vego_breakpoints': Param(False, bool, live=True),
+                        'indi_use_steer_angle_breakpoints': Param(False, bool, live=True),
+                        'indi_inner_gain_bp': Param([0, 255, 255], [list, float, int], live=True),
+                        'indi_inner_gain_v': Param([6.0, 6.0, 6.0], [list, float, int], live=True),
+                        'indi_outer_gain_bp': Param([0, 255, 255], [list, float, int], live=True),
+                        'indi_outer_grain_v': Param([15, 15, 15], [list, float, int], live=True),
+                        'indi_time_constant_bp': Param([0, 255, 255], [list, float, int], live=True),
+                        'indi_time_constant_v': Param([5.5, 5.5, 5.5], [list, float, int], live=True),
+                        'indi_actuator_effectiveness_bp': Param([0, 255, 255], [list, float, int], live=True),
+                        'indi_actuator_effectiveness_v': Param([6, 6, 6], [list, float, int], live=True)}
 
     self._params_file = '/data/op_params.json'
     self._backup_file = '/data/op_params_corrupt.json'
