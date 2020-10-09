@@ -3,14 +3,15 @@
 	url = https://github.com/commaai/panda.git
 [submodule "opendbc"]
 	path = opendbc
-	url = https://github.com/commaai/opendbc.git
+	url = https://github.com/jamcar23/opendbc.git
+	branch = src
 [submodule "laika_repo"]
 	path = laika_repo
 	url = https://github.com/commaai/laika.git
 [submodule "cereal"]
 	path = cereal
 	url = https://github.com/jamcar23/cereal.git
-	branch = update-0.7.9
+	branch = src
 [submodule "rednose_repo"]
 	path = rednose_repo
 	url = https://github.com/commaai/rednose.git
