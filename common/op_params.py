@@ -86,7 +86,7 @@ class opParams:
                         'indi_inner_gain_bp': Param([0, 255, 255], [list, float, int], live=True),
                         'indi_inner_gain_v': Param([6.0, 6.0, 6.0], [list, float, int], live=True),
                         'indi_outer_gain_bp': Param([0, 255, 255], [list, float, int], live=True),
-                        'indi_outer_grain_v': Param([15, 15, 15], [list, float, int], live=True),
+                        'indi_outer_gain_v': Param([15, 15, 15], [list, float, int], live=True),
                         'indi_time_constant_bp': Param([0, 255, 255], [list, float, int], live=True),
                         'indi_time_constant_v': Param([5.5, 5.5, 5.5], [list, float, int], live=True),
                         'indi_actuator_effectiveness_bp': Param([0, 255, 255], [list, float, int], live=True),
