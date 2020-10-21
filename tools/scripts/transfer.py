@@ -60,7 +60,7 @@ def get_uploaded_routes(dongle_id, tools_api):
     segs = dict()
 
     for seg_json in seg_resp:
-        segs[seg_json["canonical_route_name"]] = None
+        segs[seg_json["canonical_route_name"].split("|")[1]] = None
 
     print("Finished getting segments\n\n")
 
@@ -93,11 +93,13 @@ def main(args):
         new_segs = get_uploaded_routes(dongle_id, tools_api)
 
         for seg in old_segs:
+            route = f"{old_dongle_id}|{seg}"
+            
             if not seg or seg in new_segs:
-                print(f"Skipping {seg} because a route already exists on new dongle.\n\n")
+                print(f"Skipping {route} because a route already exists on new dongle.\n\n")
                 continue
 
-            transfer_route(seg, tools_api, api, dongle_id)
+            transfer_route(route, tools_api, api, dongle_id)
     
         
 
