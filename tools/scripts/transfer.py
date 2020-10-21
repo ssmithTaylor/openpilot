@@ -14,7 +14,16 @@ FILE_TRANSFER_ORDER = ["qlogs", "logs", "cameras", "dcameras", "qcameras"]
 def transfer_route(route, tools_api, api, dongle_id):
     print("Begin transfer of route: " + route)
 
-    files = tools_api.get('v1/route/' + route + '/files')
+    files = None
+
+    while True:
+        try:
+            files = tools_api.get('v1/route/' + route + '/files', timeout=10)
+            break
+        except Exception as e:
+            print(f"Error while downloading files: {e}")
+            time.sleep(60)
+
 
     for key in FILE_TRANSFER_ORDER:
         for url in files[key]:
@@ -94,7 +103,7 @@ def main(args):
 
         for seg in old_segs:
             route = f"{old_dongle_id}|{seg}"
-            
+
             if not seg or seg in new_segs:
                 print(f"Skipping {route} because a route already exists on new dongle.\n\n")
                 continue
