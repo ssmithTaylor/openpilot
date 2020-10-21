@@ -3,6 +3,7 @@ import json
 import requests
 import time
 
+from functools import wraps
 from datetime import datetime, timedelta
 from common.api import Api
 from common.params import Params
@@ -13,10 +14,10 @@ FILE_TRANSFER_ORDER = ["qlogs", "logs", "cameras", "dcameras", "qcameras"]
 
 def retry(exceptions, delay=0, times=2):
     def outer_wrapper(function):
-        @functools.wraps(function)
+        @wraps(function)
         def inner_wrapper(*args, **kwargs):
             final_excep = None  
-            for counter in xrange(times):
+            for counter in range(times):
                 if counter > 0:
                     time.sleep(delay)
                 final_excep = None
