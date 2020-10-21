@@ -45,7 +45,10 @@ def main(args):
     assert old_dongle_id, "Old device's dongle ID is required"
     assert token, "Comma API token is required"
 
-    route = None if len(args) < 3 else args[2]
+    route = None
+
+    if len(args) == 3:
+        route = f"{old_dongle_id}|{args[2]}"
 
     tools_api = ToolsApi(token=token)
 
