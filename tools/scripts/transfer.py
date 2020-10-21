@@ -11,23 +11,52 @@ from urllib.parse import urlparse
 
 FILE_TRANSFER_ORDER = ["qlogs", "logs", "cameras", "dcameras", "qcameras"]
 
+def retry(exceptions, delay=0, times=2):
+    def outer_wrapper(function):
+        @functools.wraps(function)
+        def inner_wrapper(*args, **kwargs):
+            final_excep = None  
+            for counter in xrange(times):
+                if counter > 0:
+                    time.sleep(delay)
+                final_excep = None
+                try:
+                    value = function(*args, **kwargs)
+                    return value
+                except (exceptions) as e:
+                    final_excep = e
+                    print(f"Error: {e}")
+
+            if final_excep is not None:
+                raise final_excep
+        return inner_wrapper
+
+    return outer_wrapper
+
+@retry((TimeoutError, ConnectionError), 60, 5)
+def put_url(url, **kwargs):
+    return requests.put(url, kwargs)
+
+@retry((TimeoutError, ConnectionError), 60, 5)
+def get_upload_url(api, dongle_id, segment_file):
+    return api.get("v1.3/" + dongle_id + "/upload_url/", timeout=10, path=segment_file, access_token=api.get_token())
+
+@retry((TimeoutError, ConnectionError), 60, 5)
+def get_url(url):
+    return requests.get(url)
+
+@retry((TimeoutError, ConnectionError), 60, 5)
+def get_files(route, tools_api):
+    return tools_api.get('v1/route/' + route + '/files', timeout=10)
+
 def transfer_route(route, tools_api, api, dongle_id):
     print("Begin transfer of route: " + route)
 
-    files = None
-
-    while True:
-        try:
-            files = tools_api.get('v1/route/' + route + '/files', timeout=10)
-            break
-        except Exception as e:
-            print(f"Error while downloading files: {e}")
-            time.sleep(60)
-
+    files = get_files(route, tools_api)
 
     for key in FILE_TRANSFER_ORDER:
         for url in files[key]:
-            url_file = requests.get(url)
+            url_file = get_url(url)
             dat = url_file.content
 
             print(f"Done downloading {route}. Prepairing upload...")
@@ -35,30 +64,17 @@ def transfer_route(route, tools_api, api, dongle_id):
             _, _, time_str, segment_num, fn = urlparse(url).path.rsplit('/', maxsplit=4)
             segment_file = f'{time_str}--{segment_num}/{fn}'
             print(f"Getting upload URL for: {segment_file}")
-            failed_last_run = False
+            
+            url_resp = get_upload_url(api, dongle_id, segment_file)
+            url_resp_json = json.loads(url_resp.text)
+            upload_url = url_resp_json['url']
+            headers = url_resp_json['headers']
 
+            print(f"Uploading: {segment_file}")
+            upload_resp = put_url(upload_url, data=dat, headers=headers, timeout=10)
 
-            while True:
-                try:
-                    url_resp = api.get("v1.3/" + dongle_id + "/upload_url/", timeout=10, path=segment_file, access_token=api.get_token())
-                    url_resp_json = json.loads(url_resp.text)
-                    upload_url = url_resp_json['url']
-                    headers = url_resp_json['headers']
-
-                    print(f"Uploading: {segment_file}")
-                    upload_resp = requests.put(upload_url, data=dat, headers=headers, timeout=10)
-
-                    if upload_resp is not None and upload_resp.status_code in (200, 201):
-                        print(f"Finished uploading: {segment_file}\n\n")
-                        break
-                except Exception as e:
-                    print(f"Error while uploading: {e}")
-
-                    if failed_last_run:
-                        raise e
-                    else:
-                        failed_last_run = True
-                        time.sleep(60)
+            if upload_resp is not None and upload_resp.status_code in (200, 201):
+                print(f"Finished uploading: {segment_file}\n\n")
 
 
 def get_uploaded_routes(dongle_id, tools_api):
