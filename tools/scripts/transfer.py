@@ -35,7 +35,7 @@ def transfer_route(route, tools_api, api, dongle_id):
             upload_resp = requests.put(upload_url, data=dat, headers=headers, timeout=10)
 
             if upload_resp is not None and upload_resp.status_code in (200, 201):
-                print(f"Finished uploading: {segment_file}")
+                print(f"Finished uploading: {segment_file}\n\n")
             
 
 def main(args):
