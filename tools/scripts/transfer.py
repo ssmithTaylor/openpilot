@@ -1,52 +1,30 @@
 import sys
 import json
 import requests
-import time
 
-from functools import wraps
 from datetime import datetime, timedelta
 from common.api import Api
 from common.params import Params
 from tools.lib.api import CommaApi as ToolsApi
+from tools.lib.retry import retry
 from urllib.parse import urlparse
 
 FILE_TRANSFER_ORDER = ["qlogs", "logs", "cameras", "dcameras", "qcameras"]
 
-def retry(exceptions, delay=0, times=2):
-    def outer_wrapper(function):
-        @wraps(function)
-        def inner_wrapper(*args, **kwargs):
-            final_excep = None  
-            for counter in range(times):
-                if counter > 0:
-                    time.sleep(delay)
-                final_excep = None
-                try:
-                    value = function(*args, **kwargs)
-                    return value
-                except (exceptions) as e:
-                    final_excep = e
-                    print(f"Error: {e}")
 
-            if final_excep is not None:
-                raise final_excep
-        return inner_wrapper
-
-    return outer_wrapper
-
-@retry((TimeoutError, ConnectionError), 60, 5)
+@retry(tries=5, delay=60)
 def put_url(url, **kwargs):
     return requests.put(url, kwargs)
 
-@retry((TimeoutError, ConnectionError), 60, 5)
+@retry(tries=5, delay=60)
 def get_upload_url(api, dongle_id, segment_file):
     return api.get("v1.3/" + dongle_id + "/upload_url/", timeout=10, path=segment_file, access_token=api.get_token())
 
-@retry((TimeoutError, ConnectionError), 60, 5)
+@retry(tries=5, delay=60)
 def get_url(url):
     return requests.get(url)
 
-@retry((TimeoutError, ConnectionError), 60, 5)
+@retry(tries=5, delay=60)
 def get_files(route, tools_api):
     return tools_api.get('v1/route/' + route + '/files', timeout=10)
 
