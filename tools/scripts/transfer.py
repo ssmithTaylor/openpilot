@@ -5,7 +5,6 @@ import requests
 from common.api import Api
 from common.params import Params
 from tools.lib.api import CommaApi as ToolsApi
-from tools.lib.url_file import URLFile
 from urllib.parse import urlparse
 
 FILE_TRANSFER_ORDER = ["qlogs", "logs", "cameras", "dcameras", "qcameras"]
@@ -17,8 +16,8 @@ def transfer_route(route, tools_api, api, dongle_id):
 
     for key in FILE_TRANSFER_ORDER:
         for url in files[key]:
-            url_file = URLFile(url, True)
-            dat = url_file.read()
+            url_file = requests.get(url)
+            dat = url_file.content
 
             print(f"Done downloading {route}. Prepairing upload...")
 
