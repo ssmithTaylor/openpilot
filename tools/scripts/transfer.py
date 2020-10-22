@@ -1,6 +1,7 @@
 import sys
 import json
 import requests
+import time
 
 from datetime import datetime, timedelta
 from common.api import Api
@@ -14,7 +15,7 @@ FILE_TRANSFER_ORDER = ["qlogs", "logs", "cameras", "dcameras", "qcameras"]
 
 @retry(tries=5, delay=60)
 def put_url(url, **kwargs):
-    print(f"Sending PUT request to {url}")
+    print("Sending PUT request")
     return requests.put(url, **kwargs)
 
 @retry(tries=5, delay=60)
@@ -24,7 +25,7 @@ def get_upload_url(api, dongle_id, segment_file):
 
 @retry(tries=5, delay=60)
 def get_url(url):
-    print(f"Sending GET request to {url}")
+    print("Sending GET request")
     return requests.get(url, timeout=10)
 
 @retry(tries=5, delay=60)
@@ -107,6 +108,8 @@ def main(args):
                 continue
 
             transfer_route(route, tools_api, api, dongle_id)
+
+            print(f"\n\nFinish transfering {route}\n\n")
     
         
 
