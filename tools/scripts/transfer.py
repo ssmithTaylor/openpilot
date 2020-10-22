@@ -14,7 +14,7 @@ FILE_TRANSFER_ORDER = ["qlogs", "logs", "cameras", "dcameras", "qcameras"]
 
 @retry(tries=5, delay=60)
 def put_url(url, **kwargs):
-    return requests.put(url, kwargs)
+    return requests.put(url, **kwargs)
 
 @retry(tries=5, delay=60)
 def get_upload_url(api, dongle_id, segment_file):
