@@ -1,7 +1,6 @@
 import sys
 import json
 import requests
-import time
 
 from datetime import datetime, timedelta
 from common.api import Api
