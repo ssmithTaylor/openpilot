@@ -14,18 +14,22 @@ FILE_TRANSFER_ORDER = ["qlogs", "logs", "cameras", "dcameras", "qcameras"]
 
 @retry(tries=5, delay=60)
 def put_url(url, **kwargs):
+    print(f"Sending PUT request to {url}")
     return requests.put(url, **kwargs)
 
 @retry(tries=5, delay=60)
 def get_upload_url(api, dongle_id, segment_file):
+    print(f"Getting upload URL for: {segment_file}")
     return api.get("v1.3/" + dongle_id + "/upload_url/", timeout=10, path=segment_file, access_token=api.get_token())
 
 @retry(tries=5, delay=60)
 def get_url(url):
-    return requests.get(url)
+    print(f"Sending GET request to {url}")
+    return requests.get(url, timeout=10)
 
 @retry(tries=5, delay=60)
 def get_files(route, tools_api):
+    print(f"Getting files for {route}")
     return tools_api.get('v1/route/' + route + '/files', timeout=10)
 
 def transfer_route(route, tools_api, api, dongle_id):
@@ -42,7 +46,6 @@ def transfer_route(route, tools_api, api, dongle_id):
 
             _, _, time_str, segment_num, fn = urlparse(url).path.rsplit('/', maxsplit=4)
             segment_file = f'{time_str}--{segment_num}/{fn}'
-            print(f"Getting upload URL for: {segment_file}")
             
             url_resp = get_upload_url(api, dongle_id, segment_file)
             url_resp_json = json.loads(url_resp.text)
