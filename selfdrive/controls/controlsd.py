@@ -3,15 +3,16 @@ import os
 from cereal import car, log
 from common.hardware import HARDWARE
 from common.numpy_fast import clip
-from common.realtime import sec_since_boot, config_rt_process, Priority, Ratekeeper, DT_CTRL
+from common.realtime import sec_since_boot, config_realtime_process, Priority, Ratekeeper, DT_CTRL
 from common.profiler import Profiler
 from common.params import Params, put_nonblocking
+from common.op_params import opParams
 import cereal.messaging as messaging
 from selfdrive.config import Conversions as CV
 from selfdrive.boardd.boardd import can_list_to_can_capnp
 from selfdrive.car.car_helpers import get_car, get_startup_event, get_one_can
 from selfdrive.controls.lib.lane_planner import CAMERA_OFFSET
-from selfdrive.controls.lib.drive_helpers import update_v_cruise, initialize_v_cruise
+from selfdrive.controls.lib.drive_helpers import update_v_cruise, initialize_v_cruise, offset_v_cruise
 from selfdrive.controls.lib.longcontrol import LongControl, STARTING_TARGET_SPEED
 from selfdrive.controls.lib.latcontrol_pid import LatControlPID
 from selfdrive.controls.lib.latcontrol_indi import LatControlINDI
@@ -42,7 +43,7 @@ EventName = car.CarEvent.EventName
 
 class Controls:
   def __init__(self, sm=None, pm=None, can_sock=None):
-    config_rt_process(3, Priority.CTRL_HIGH)
+    config_realtime_process(3, Priority.CTRL_HIGH)
 
     # Setup sockets
     self.pm = pm
@@ -124,7 +125,7 @@ class Controls:
     self.events_prev = []
     self.current_alert_types = [ET.PERMANENT]
 
-    self.sm['liveCalibration'].calStatus = Calibration.INVALID
+    self.sm['liveCalibration'].calStatus = Calibration.CALIBRATED
     self.sm['thermal'].freeSpace = 1.
     self.sm['dMonitoringState'].events = []
     self.sm['dMonitoringState'].awarenessStatus = 1.
@@ -146,6 +147,9 @@ class Controls:
     # controlsd is driven by can recv, expected at 100Hz
     self.rk = Ratekeeper(100, print_delay_threshold=None)
     self.prof = Profiler(False)  # off by default
+
+    self.opParams = opParams()
+    self.setpoint_offset = self.opParams.get('setpoint_offset') * CV.MPH_TO_KPH
 
   def update_events(self, CS):
     """Compute carEvents from carState"""
@@ -234,7 +238,7 @@ class Controls:
 
     # Only allow engagement with brake pressed when stopped behind another stopped car
     if CS.brakePressed and self.sm['plan'].vTargetFuture >= STARTING_TARGET_SPEED \
-      and not self.CP.radarOffCan and CS.vEgo < 0.3:
+      and self.CP.openpilotLongitudinalControl and CS.vEgo < 0.3:
       self.events.add(EventName.noTarget)
 
   def data_sample(self):
@@ -277,6 +281,8 @@ class Controls:
       self.v_cruise_kph = update_v_cruise(self.v_cruise_kph, CS.buttonEvents, self.enabled)
     elif self.CP.enableCruise and CS.cruiseState.enabled:
       self.v_cruise_kph = CS.cruiseState.speed * CV.MS_TO_KPH
+
+    self.v_cruise_kph = offset_v_cruise(self.v_cruise_kph, self.v_cruise_kph_last, self.setpoint_offset)
 
     # decrease the soft disable timer at every step, as it's reset on
     # entrance in SOFT_DISABLING state
@@ -369,7 +375,7 @@ class Controls:
     v_acc_sol = plan.vStart + dt * (a_acc_sol + plan.aStart) / 2.0
 
     # Gas/Brake PID loop
-    actuators.gas, actuators.brake = self.LoC.update(self.active, CS, v_acc_sol, plan.vTargetFuture, a_acc_sol, self.CP)
+    actuators.gas, actuators.brake = self.LoC.update(self.active, CS, v_acc_sol, plan.vTargetFuture, a_acc_sol, self.CP, plan.longitudinalPlanSource)
     # Steering PID loop and lateral MPC
     actuators.steer, actuators.steerAngle, lac_log = self.LaC.update(self.active, CS, self.CP, path_plan)
 

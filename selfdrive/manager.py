@@ -221,13 +221,9 @@ persistent_processes = [
 
 if not PC:
   persistent_processes += [
+    'updated',
     'logcatd',
     'tombstoned',
-  ]
-
-if ANDROID:
-  persistent_processes += [
-    'updated',
   ]
 
 car_started_processes = [
@@ -238,7 +234,6 @@ car_started_processes = [
   'calibrationd',
   'paramsd',
   'camerad',
-  'modeld',
   'proclogd',
   'locationd',
   'clocksd',
@@ -270,6 +265,9 @@ if ANDROID:
     'rtshield',
   ]
 
+# starting dmonitoringmodeld when modeld is initializing can sometimes \
+# result in a weird snpe state where dmon constantly uses more cpu than normal.
+car_started_processes += ['modeld']
 
 def register_managed_process(name, desc, car_started=False):
   global managed_processes, car_started_processes, persistent_processes
@@ -623,11 +621,28 @@ if __name__ == "__main__":
     cloudlog.exception("Manager failed to start")
 
     # Show last 3 lines of traceback
-    error = traceback.format_exc(-3)
-    error = "Manager failed to start\n \n" + error
-    with TextWindow(error) as t:
-      t.wait_for_exit()
+    error = traceback.format_exc(3)
 
+    error = "Manager failed to start. Press Reset to pull and reset to origin!\n \n" + error
+    with TextWindow(error) as t:
+      exit_status = t.wait_for_exit()
+    if exit_status == 'reset':
+      for _ in range(2):
+        try:
+          subprocess.check_output(["git", "stash"], cwd=BASEDIR)
+          subprocess.check_output(["git", "reset", "--hard", "@{u}"], cwd=BASEDIR)
+          subprocess.check_output(["git", "fetch"], cwd=BASEDIR)
+          subprocess.check_output(["git", "checkout", "r2+"], cwd=BASEDIR)
+          print('git reset successful!')
+          break
+        except subprocess.CalledProcessError as e:
+          print(e.output)
+          if _ != 1:
+            print('git reset failed, trying again')
+            time.sleep(5)  # wait 5 seconds and try again
+
+    time.sleep(1)
+    subprocess.check_output(["am", "start", "-a", "android.intent.action.REBOOT"])
     raise
 
   # manual exit because we are forked

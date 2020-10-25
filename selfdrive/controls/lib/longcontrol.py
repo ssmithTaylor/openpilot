@@ -1,8 +1,10 @@
 from cereal import log
 from common.numpy_fast import clip, interp
 from selfdrive.controls.lib.pid import PIController
+from common.op_params import opParams
 
 LongCtrlState = log.ControlsState.LongControlState
+Source = log.Plan.LongitudinalPlanSource
 
 STOPPING_EGO_SPEED = 0.5
 MIN_CAN_SPEED = 0.3  # TODO: parametrize this in car interface
@@ -14,11 +16,7 @@ STOPPING_BRAKE_RATE = 0.2  # brake_travel/s while trying to stop
 STARTING_BRAKE_RATE = 0.8  # brake_travel/s while releasing on restart
 BRAKE_STOPPING_TARGET = 0.5  # apply at least this amount of brake to maintain the vehicle stationary
 
-_MAX_SPEED_ERROR_BP = [0., 30.]  # speed breakpoints
-_MAX_SPEED_ERROR_V = [1.5, .8]  # max positive v_pid error VS actual speed; this avoids controls windup due to slow pedal resp
-
 RATE = 100.0
-
 
 def long_control_state_trans(active, long_control_state, v_ego, v_target, v_pid,
                              output_gb, brake_pressed, cruise_standstill):
@@ -65,13 +63,15 @@ class LongControl():
                             convert=compute_gb)
     self.v_pid = 0.0
     self.last_output_gb = 0.0
+    self.opParams = opParams()
+    self.enable_coasting = self.opParams.get('enable_coasting')
 
   def reset(self, v_pid):
     """Reset PID controller and change setpoint"""
     self.pid.reset()
     self.v_pid = v_pid
 
-  def update(self, active, CS, v_target, v_target_future, a_target, CP):
+  def update(self, active, CS, v_target, v_target_future, a_target, CP, source):
     """Update longitudinal control. This updates the state machine and runs a PID loop"""
     # Actuation limits
     gas_max = interp(CS.vEgo, CP.gasMaxBP, CP.gasMaxV)
@@ -86,8 +86,7 @@ class LongControl():
     v_ego_pid = max(CS.vEgo, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
 
     if self.long_control_state == LongCtrlState.off or CS.gasPressed:
-      self.v_pid = v_ego_pid
-      self.pid.reset()
+      self.reset(v_ego_pid)
       output_gb = 0.
 
     # tracking objects and driving
@@ -95,6 +94,16 @@ class LongControl():
       self.v_pid = v_target
       self.pid.pos_limit = gas_max
       self.pid.neg_limit = - brake_max
+
+      if self.enable_coasting:
+        no_gas = source in [Source.cruiseBrake, Source.cruiseCoast]
+        no_brake = source in [Source.cruiseGas, Source.cruiseCoast]
+        
+        if no_gas:
+          self.pid.pos_limit = 0.
+
+        if no_brake:
+          self.pid.neg_limit = 0.
 
       # Toyota starts braking more when it thinks you want to stop
       # Freeze the integrator so we don't accelerate to compensate, and don't allow positive acceleration
@@ -106,6 +115,9 @@ class LongControl():
       if prevent_overshoot:
         output_gb = min(output_gb, 0.0)
 
+      if self.enable_coasting and no_gas and self.last_output_gb > 0.0:
+        output_gb = min(-self.last_output_gb, output_gb)
+
     # Intention is to stop, switch to a different brake control until we stop
     elif self.long_control_state == LongCtrlState.stopping:
       # Keep applying brakes until the car is stopped
@@ -113,15 +125,13 @@ class LongControl():
         output_gb -= STOPPING_BRAKE_RATE / RATE
       output_gb = clip(output_gb, -brake_max, gas_max)
 
-      self.v_pid = CS.vEgo
-      self.pid.reset()
+      self.reset(CS.vEgo)
 
     # Intention is to move again, release brake fast before handing control to PID
     elif self.long_control_state == LongCtrlState.starting:
       if output_gb < -0.2:
         output_gb += STARTING_BRAKE_RATE / RATE
-      self.v_pid = CS.vEgo
-      self.pid.reset()
+      self.reset(CS.vEgo)
 
     self.last_output_gb = output_gb
     final_gas = clip(output_gb, 0., gas_max)

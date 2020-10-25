@@ -25,7 +25,7 @@ int write_param_float(float param, const char* param_name, bool persistent_param
 
 void ui_init(UIState *s) {
   s->sm = new SubMaster({"modelV2", "controlsState", "uiLayoutState", "liveCalibration", "radarState", "thermal",
-                         "health", "carParams", "ubloxGnss", "driverState", "dMonitoringState"});
+                         "health", "carParams", "ubloxGnss", "driverState", "dMonitoringState", "sensorEvents"});
 
   s->started = false;
   s->status = STATUS_OFFROAD;
@@ -111,7 +111,6 @@ void update_sockets(UIState *s) {
   UIScene &scene = s->scene;
   SubMaster &sm = *(s->sm);
 
-  // poll sockets
   if (sm.update(0) == 0){
     return;
   }
@@ -214,6 +213,16 @@ void update_sockets(UIState *s) {
   } else if ((sm.frame - sm.rcv_frame("dMonitoringState")) > UI_FREQ/2) {
     scene.frontview = false;
   }
+
+#ifdef QCOM2 // TODO: use this for QCOM too
+  if (sm.updated("sensorEvents")) {
+    for (auto sensor : sm["sensorEvents"].getSensorEvents()) {
+      if (sensor.which() == cereal::SensorEventData::LIGHT) {
+        s->light_sensor = sensor.getLight();
+      }
+    }
+  }
+#endif
 
   s->started = scene.thermal.getStarted() || scene.frontview;
 }

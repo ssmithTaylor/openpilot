@@ -5,6 +5,7 @@ from selfdrive.car.toyota.values import Ecu, ECU_FINGERPRINT, CAR, TSS2_CAR, FIN
 from selfdrive.car import STD_CARGO_KG, scale_rot_inertia, scale_tire_stiffness, is_ecu_disconnected, gen_empty_fingerprint
 from selfdrive.swaglog import cloudlog
 from selfdrive.car.interfaces import CarInterfaceBase
+from common.op_params import opParams
 
 EventName = car.CarEvent.EventName
 
@@ -15,6 +16,7 @@ class CarInterface(CarInterfaceBase):
 
   @staticmethod
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), has_relay=False, car_fw=[]):  # pylint: disable=dangerous-default-value
+    op_params = opParams()
     ret = CarInterfaceBase.get_std_params(candidate, fingerprint, has_relay)
 
     ret.carName = "toyota"
@@ -195,13 +197,23 @@ class CarInterface(CarInterfaceBase):
 
     elif candidate in [CAR.COROLLA_TSS2, CAR.COROLLAH_TSS2]:
       stop_and_go = True
-      ret.safetyParam = 73
+      ret.safetyParam = 50
       ret.wheelbase = 2.63906
-      ret.steerRatio = 13.9
-      tire_stiffness_factor = 0.444  # not optimized yet
+      ret.steerRatio = 15.33
       ret.mass = 3060. * CV.LB_TO_KG + STD_CARGO_KG
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.6], [0.1]]
-      ret.lateralTuning.pid.kf = 0.00007818594
+
+      if op_params.get('corolla_use_indi'):
+        ret.lateralTuning.init('indi')
+        ret.lateralTuning.indi.innerLoopGain = 6.0
+        ret.lateralTuning.indi.outerLoopGain = 15.0
+        ret.lateralTuning.indi.timeConstant = 5.5
+        ret.lateralTuning.indi.actuatorEffectiveness = 6.0
+        ret.steerActuatorDelay = 0.6
+        tire_stiffness_factor = 0.996
+      else:
+        ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.6], [0.1]]
+        ret.lateralTuning.pid.kf = 0.00007818594
+        tire_stiffness_factor = 0.444
 
     elif candidate in [CAR.LEXUS_ES_TSS2, CAR.LEXUS_ESH_TSS2]:
       stop_and_go = True
@@ -291,13 +303,13 @@ class CarInterface(CarInterfaceBase):
     ret.longitudinalTuning.kiBP = [0., 35.]
 
     if ret.enableGasInterceptor:
-      ret.gasMaxBP = [0., 9., 35]
-      ret.gasMaxV = [0.2, 0.5, 0.7]
+      ret.gasMaxBP = op_params.get('gas_max_bp')
+      ret.gasMaxV = op_params.get('gas_max_v')
       ret.longitudinalTuning.kpV = [1.2, 0.8, 0.5]
       ret.longitudinalTuning.kiV = [0.18, 0.12]
     else:
-      ret.gasMaxBP = [0.]
-      ret.gasMaxV = [0.5]
+      ret.gasMaxBP = op_params.get('gas_max_bp')
+      ret.gasMaxV = op_params.get('gas_max_v')
       ret.longitudinalTuning.kpV = [3.6, 2.4, 1.5]
       ret.longitudinalTuning.kiV = [0.54, 0.36]
 

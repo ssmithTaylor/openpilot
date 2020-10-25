@@ -1,3 +1,7 @@
+op_edit.py
+common/colors.py
+common/op_params.py
+
 .gitignore
 LICENSE
 launch.sh
@@ -315,6 +319,7 @@ selfdrive/loggerd/__init__.py
 selfdrive/loggerd/config.py
 selfdrive/loggerd/uploader.py
 selfdrive/loggerd/deleter.py
+selfdrive/loggerd/xattr_cache.py
 
 selfdrive/sensord/SConscript
 selfdrive/sensord/gpsd.cc
@@ -475,7 +480,6 @@ cereal/messaging/msgq.cc
 cereal/messaging/msgq.hpp
 cereal/messaging/socketmaster.cc
 
-panda/.gitignore
 panda/__init__.py
 panda/VERSION
 panda/board/**

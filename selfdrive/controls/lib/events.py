@@ -229,14 +229,6 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., 15.),
   },
 
-  EventName.startupWhitePanda: {
-    ET.PERMANENT: Alert(
-      "WARNING: White panda is deprecated",
-      "Upgrade to comma two or black panda",
-      AlertStatus.userPrompt, AlertSize.mid,
-      Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., 15.),
-  },
-
   EventName.startupMaster: {
     ET.PERMANENT: Alert(
       "WARNING: This branch is not tested",
@@ -342,7 +334,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       "openpilot will not brake while gas pressed",
       "",
       AlertStatus.normal, AlertSize.small,
-      Priority.LOWEST, VisualAlert.none, AudibleAlert.none, .0, .0, .1),
+      Priority.LOWEST, VisualAlert.none, AudibleAlert.none, .0, .0, .1, creation_delay=1.),
   },
 
   EventName.vehicleModelInvalid: {
