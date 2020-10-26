@@ -90,7 +90,13 @@ class opParams:
                         'indi_time_constant_bp': Param([0, 255, 255], [list, float, int], live=True),
                         'indi_time_constant_v': Param([5.5, 5.5, 5.5], [list, float, int], live=True),
                         'indi_actuator_effectiveness_bp': Param([0, 255, 255], [list, float, int], live=True),
-                        'indi_actuator_effectiveness_v': Param([6, 6, 6], [list, float, int], live=True)}
+                        'indi_actuator_effectiveness_v': Param([6, 6, 6], [list, float, int], live=True),
+                        'a_cruise_min_bp': Param([0.0, 5.0, 10.0, 20.0, 55.0], [list, float], live=True),
+                        'a_cruise_min_v': Param([-1.0, -0.7, -0.6, -0.5, -0.3], [list, float], live=True),
+                        'a_cruise_min_v_following': Param([-3.0, -2.5, -2.0, -1.5, -1.0], [list, float], live=True),
+                        'a_cruise_max_bp': Param([0., 5., 10., 20., 55.], [list, float], live=True),
+                        'a_cruise_max_v': Param([0.8, 0.9, 1.0, 0.4, 0.2], [list, float], live=True),
+                        'a_cruise_max_v_following': Param([1.6, 1.4, 1.4, .7, .3], [list, float], live=True)}
 
     self._params_file = '/data/op_params.json'
     self._backup_file = '/data/op_params_corrupt.json'
