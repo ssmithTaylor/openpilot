@@ -244,7 +244,7 @@ static void ui_draw_vision_lane_lines(UIState *s) {
     if(s->sm->updated("modelV2")) {
       update_line_data(s, scene->model.getRoadEdges()[re_idx], 0.025, pvd_re + re_idx, scene->max_distance);
     }
-    NVGcolor color = nvgRGBAf(1.0, 0.0, 0.0, 0.6);
+    NVGcolor color = nvgRGBAf(1.0, 0.0, 0.0, 0.8);
     ui_draw_line(s, (pvd_re + re_idx)->v, (pvd_re + re_idx)->cnt, &color, nullptr);
   }
   
