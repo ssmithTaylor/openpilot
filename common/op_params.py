@@ -65,11 +65,11 @@ class opParams:
 
     VT = ValueTypes()
     self.fork_params = {'camera_offset': Param(0.06, VT.number, 'Your camera offset to use in lane_planner.py', live=True),
-                        'indi_inner_gain': Param(6.0, VT.number, live=True),
-                        'indi_outer_gain': Param(15.0, VT.number, live=True),
+                        'indi_inner_gain': Param(9.0, VT.number, live=True),
+                        'indi_outer_gain': Param(8.9, VT.number, live=True),
                         'indi_time_constant': Param(5.5, VT.number, live=True),
-                        'indi_actuator_effectiveness': Param(6.0, VT.number, live=True),
-                        'steer_actuator_delay': Param(0.57, VT.number, live=True),
+                        'indi_actuator_effectiveness': Param(9.0, VT.number, live=True),
+                        'steer_actuator_delay': Param(0.60, VT.number, live=True),
                         'alca_nudge_required': Param(False, bool, 'Whether to wait for applied torque to the wheel (nudge) before making lane changes. '
                                                                  'If False, lane change will occur IMMEDIATELY after signaling'),
                         'alca_min_speed': Param(20.0, VT.number, 'The minimum speed allowed for an automatic lane change (in MPH)'),
