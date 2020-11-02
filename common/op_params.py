@@ -4,13 +4,14 @@ import json
 import time
 from common.colors import opParams_error as error
 from common.colors import opParams_warning as warning
+from common.hardware import PC
 try:
   from common.realtime import sec_since_boot
 except ImportError:
   sec_since_boot = time.time
   warning("Using python time.time() instead of faster sec_since_boot")
 
-travis = False  # replace with travis_checker if you use travis or GitHub Actions
+travis = True if PC else False  # replace with travis_checker if you use travis or GitHub Actions
 
 
 class ValueTypes:
