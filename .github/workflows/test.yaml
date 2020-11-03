@@ -1,8 +1,6 @@
 name: openpilot tests
 on:
   push:
-    branches-ignore:
-      - src
   pull_request:
   status:
 
@@ -170,15 +168,11 @@ jobs:
         with:
           submodules: true
           lfs: true
-      - name: Debug files
-        run: |
-          ls -l --block-size=K selfdrive/test/process_replay/ 
       - name: Build Docker image
         run: eval "$BUILD"
       - name: Run replay
         run: |
           $PERSIST "cd /tmp/openpilot && \
-                    ls -l --block-size=K selfdrive/test/process_replay/ && \
                     scons -j$(nproc) && \
                     CI=1 coverage run selfdrive/test/process_replay/test_processes.py --local"
       - name: Upload coverage to Codecov
@@ -245,3 +239,40 @@ jobs:
         run: |
           docker commit tmppilot tmppilotci
           $CI_RUN "cd /tmp/openpilot && bash <(curl -s https://codecov.io/bash) -v -F test_car_models"
+
+  github_push_prebuilt:
+    name: github push prebuilt
+    runs-on: ubuntu-16.04
+    timeout-minutes: 50
+    if: github.repository == 'jamcar23/openpilot'
+    needs: [static_analysis, unit_tests, process_replay, test_longitudinal, test_car_models]
+    env:
+      BRANCH: ""
+      TARGET_DIR: tmp_op_ci
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+          lfs: true
+      - name: Prepare PR CI Build
+        if: github.ref != 'refs/heads/src' && github.event_name == 'pull_request'
+        run: |
+          echo "::set-env name=BRANCH::${{ github.event.client_payload.pull_request.head.ref }}-ci"
+      - name: Prepare Release CI Build
+        if: github.ref == 'refs/heads/src' && github.event_name == 'push'
+        run: |
+          echo "::set-env name=BRANCH::r2++"
+      - name: No Release Needed
+        if: env.BRANCH == ""
+        run: exit 0
+      - name: Prepare release files
+        run: |
+          chmod +x release/build_release_ci.sh
+          ./release/build_release_ci.sh
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ env.BRANCH }}
+          directory: ${{ env.TARGET_DIR }}
+          force: true
