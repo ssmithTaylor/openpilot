@@ -42,7 +42,7 @@ def get_segment(segment_name, original=True, local=False):
     rlog_url = BASE_URL + "%s/%s/rlog.bz2" % (route_name.replace("|", "/"), segment_num)
   elif local:
     process_replay_dir = os.path.dirname(os.path.abspath(__file__))
-    rlog_url = process_replay_dir + segment_name
+    rlog_url = process_replay_dir + segment_name.replace("|", "!")
   else:
     process_replay_dir = os.path.dirname(os.path.abspath(__file__))
     model_ref_commit = open(os.path.join(process_replay_dir, "model_ref_commit")).read().strip()
