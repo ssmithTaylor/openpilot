@@ -6,3 +6,5 @@ process_replay/model_diff.txt
 
 *.bz2
 *.hevc
+
+!process_replay/*.bz2
