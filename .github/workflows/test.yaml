@@ -170,11 +170,15 @@ jobs:
         with:
           submodules: true
           lfs: true
+      - name: Debug files
+        run: |
+          ls -l --block-size=K selfdrive/test/process_replay/ 
       - name: Build Docker image
         run: eval "$BUILD"
       - name: Run replay
         run: |
           $PERSIST "cd /tmp/openpilot && \
+                    ls -l --block-size=K selfdrive/test/process_replay/ && \
                     scons -j$(nproc) && \
                     CI=1 coverage run selfdrive/test/process_replay/test_processes.py --local"
       - name: Upload coverage to Codecov
