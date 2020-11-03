@@ -258,12 +258,12 @@ jobs:
         id: ci_build
         if: github.ref != 'refs/heads/src' && github.event_name == 'pull_request'
         run: |
-          echo "::set-env name=BRANCH::${{ github.event.client_payload.pull_request.head.ref }}-ci"
+          echo "BRANCH=${{ github.head_ref }}-ci" >> $GITHUB_ENV
       - name: Prepare Release CI Build
         id: r2_build
         if: github.ref == 'refs/heads/src' && github.event_name == 'push'
         run: |
-          echo "::set-env name=BRANCH::r2++"
+          echo "BRANCH=r2++" >> $GITHUB_ENV
       - name: Prepare release files
         if: steps.r2_build.outcome == 'success' || steps.ci_build.outcome == 'success'
         run: |
