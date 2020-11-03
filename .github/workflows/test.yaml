@@ -13,13 +13,13 @@ env:
   UNIT_TEST: coverage run --append -m unittest discover
   BUILD: |
       # build the openpilot docker base image
-      # docker pull $(grep -ioP '(?<=^from)\s+\S+' Dockerfile.openpilot_base) || true
-      # docker pull docker.io/commaai/openpilot-base:latest || true
-      # docker build --cache-from docker.io/commaai/openpilot-base:latest -t commaai/openpilot-base:latest -f Dockerfile.openpilot_base .
+      docker pull $(grep -ioP '(?<=^from)\s+\S+' Dockerfile.openpilot_base) || true
+      docker pull docker.io/commaai/openpilot-base:latest || true
+      docker build -t commaai/openpilot-base:latest -f Dockerfile.openpilot_base .
 
       # build the final CI image
       docker pull docker.io/commaai/openpilotci:latest || true
-      docker build --cache-from docker.io/commaai/openpilotci:latest -t tmppilot -f Dockerfile.openpilotci .
+      docker build -t tmppilot -f Dockerfile.openpilotci .
 
 jobs:
   build_release:
