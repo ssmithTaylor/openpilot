@@ -57,7 +57,7 @@ def test_process(cfg, lr, cmp_log_fn, ignore_fields=None, ignore_msgs=None, loca
   if ignore_msgs is None:
     ignore_msgs = []
   url = BASE_URL if not local else os.path.dirname(os.path.abspath(__file__)) + "/"
-  url += os.path.basename(cmp_log_fn)
+  url += os.path.basename(cmp_log_fn.replace("|", "!"))
   cmp_log_msgs = list(LogReader(url))
 
   log_msgs = replay_process(cfg, lr)
