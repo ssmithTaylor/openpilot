@@ -247,7 +247,7 @@ jobs:
     if: github.repository == 'jamcar23/openpilot'
     needs: [static_analysis, unit_tests, process_replay, test_longitudinal, test_car_models]
     env:
-      BRANCH: ""
+      BRANCH: ''
       TARGET_DIR: tmp_op_ci
     steps:
       - uses: actions/checkout@v2
@@ -263,7 +263,7 @@ jobs:
         run: |
           echo "::set-env name=BRANCH::r2++"
       - name: No Release Needed
-        if: env.BRANCH == ""
+        if: env.BRANCH == ''
         run: exit 0
       - name: Prepare release files
         run: |
