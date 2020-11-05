@@ -21,7 +21,7 @@ jobs:
           docker build -t tmppilot -f Dockerfile.openpilotci .
       - name: Build OP and update refs
         run: |
-          docker run --shm-size 1G --rm tmppilot /bin/sh -c \
+          docker run --shm-size 1G --rm tmppilot -v $(pwd):/tmp/openpilot /bin/sh -c \
           "cd /tmp/openpilot && \
           scons -j$(nproc) && \
           python selfdrive/test/process_replay/update_refs.py --no-upload"
