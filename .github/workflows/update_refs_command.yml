@@ -29,7 +29,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add selfdrive/test/process_replay/*.bz2
+          git add selfdrive/test/process_replay/*.bz2 ref_commit
           git commit -m "tests(processes): update process replay refs for $BRANCH"
       - name: Push changes
         uses: ad-m/github-push-action@master
