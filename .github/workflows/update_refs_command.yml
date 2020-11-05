@@ -15,6 +15,7 @@ jobs:
           submodules: true
           lfs: true
           ref: ${{ env.BRANCH }}
+          token: ${{ secrets.REPO_PAT }}
       - name: Build Docker Image
         run: |
           docker build -t commaai/openpilot-base:latest -f Dockerfile.openpilot_base .
