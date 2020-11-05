@@ -27,8 +27,8 @@ jobs:
           python selfdrive/test/process_replay/update_refs.py --no-upload"
       - name: Commit New Refs
         run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        # git config user.name "github-actions[bot]"
+        # git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git add selfdrive/test/process_replay/*.bz2
         git commit -m "tests(processes): update process replay refs for $BRANCH"
       - name: Push changes
