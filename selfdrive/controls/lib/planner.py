@@ -37,13 +37,17 @@ _A_TOTAL_MAX_BP = [20., 40.]
 Source = log.Plan.LongitudinalPlanSource
 
 
-def calc_cruise_accel_limits(v_ego, following):
-  a_cruise_min = interp(v_ego, _A_CRUISE_MIN_BP, _A_CRUISE_MIN_V)
+def calc_cruise_accel_limits(v_ego, following, op_params):
+  min_key = "a_cruise_min_v"
+  max_key = "a_cruise_max_v"
 
   if following:
-    a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V_FOLLOWING)
-  else:
-    a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V)
+    min_key += "_following"
+    max_key += "_following"
+
+  a_cruise_min = interp(v_ego, op_params.get('a_cruise_min_bp'), op_params.get(min_key))
+  a_cruise_max = interp(v_ego, op_params.get('a_cruise_max_bp'), op_params.get(max_key))
+  
   return np.vstack([a_cruise_min, a_cruise_max])
 
 
@@ -136,7 +140,7 @@ class Planner():
 
     # Calculate speed for normal cruise control
     if enabled and not self.first_loop and not sm['carState'].gasPressed:
-      accel_limits = [float(x) for x in calc_cruise_accel_limits(v_ego, following)]
+      accel_limits = [float(x) for x in calc_cruise_accel_limits(v_ego, following, self.op_params)]
       jerk_limits = [min(-0.1, accel_limits[0]), max(0.1, accel_limits[1])]  # TODO: make a separate lookup for jerk tuning
       accel_limits_turns = limit_accel_in_turns(v_ego, sm['carState'].steeringAngle, accel_limits, self.CP)
 
