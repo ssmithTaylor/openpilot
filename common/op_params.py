@@ -75,7 +75,7 @@ class opParams:
                                                                  'If False, lane change will occur IMMEDIATELY after signaling'),
                         'alca_min_speed': Param(20.0, VT.number, 'The minimum speed allowed for an automatic lane change (in MPH)'),
                         'enable_coasting': Param(False, bool, 'When true the car will try to coast down hills instead of braking.'),
-                        'coast_speed': Param(10.0, VT.number, 'The amount of speed to coast by before applying the brakes. Unit: MPH'), 
+                        'coast_speed': Param(10.0, VT.number, 'The amount of speed to coast by before applying the brakes. Unit: MPH'),
                         'setpoint_offset': Param(0, int, 'The difference between the car\'s set cruise speed and OP\'s. Useful for toyotas when coasting. Unit: MPH'),
                         'corolla_use_indi': Param(False, bool),
                         'accel_hyst_gap': Param(0.02, VT.number, live=True),
@@ -97,7 +97,8 @@ class opParams:
                         'a_cruise_min_v_following': Param([-3.0, -2.5, -2.0, -1.5, -1.0], [list, float], live=True),
                         'a_cruise_max_bp': Param([0., 5., 10., 20., 55.], [list, float], live=True),
                         'a_cruise_max_v': Param([0.8, 0.9, 1.0, 0.4, 0.2], [list, float], live=True),
-                        'a_cruise_max_v_following': Param([1.6, 1.4, 1.4, .7, .3], [list, float], live=True)}
+                        'a_cruise_max_v_following': Param([1.6, 1.4, 1.4, .7, .3], [list, float], live=True),
+                        ENABLE_UNSAFE_STEERING_RATE: Param(False, bool)}
 
     self._params_file = '/data/op_params.json'
     self._backup_file = '/data/op_params_corrupt.json'
@@ -226,3 +227,6 @@ class opParams:
       except Exception as e:
         print("Unable to write file: " + str(e))
         return False
+
+
+ENABLE_UNSAFE_STEERING_RATE = "enable_unsafe_steering_rate"

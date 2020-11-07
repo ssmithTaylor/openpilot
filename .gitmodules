@@ -1,6 +1,7 @@
 [submodule "panda"]
 	path = panda
-	url = https://github.com/commaai/panda.git
+	url = https://github.com/jamcar23/panda.git
+	branch = src
 [submodule "opendbc"]
 	path = opendbc
 	url = https://github.com/jamcar23/opendbc.git
