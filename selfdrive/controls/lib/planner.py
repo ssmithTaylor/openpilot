@@ -7,7 +7,7 @@ from common.numpy_fast import interp
 import cereal.messaging as messaging
 from cereal import car, log
 from common.realtime import sec_since_boot
-from common.op_params import opParams
+from common.op_params import opParams, ENABLE_COASTING, COAST_SPEED
 from selfdrive.swaglog import cloudlog
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.speed_smoother import speed_smoother
@@ -47,7 +47,7 @@ def calc_cruise_accel_limits(v_ego, following, op_params):
 
   a_cruise_min = interp(v_ego, op_params.get('a_cruise_min_bp'), op_params.get(min_key))
   a_cruise_max = interp(v_ego, op_params.get('a_cruise_max_bp'), op_params.get(max_key))
-  
+
   return np.vstack([a_cruise_min, a_cruise_max])
 
 
@@ -90,8 +90,6 @@ class Planner():
     self.first_loop = True
 
     self.op_params = opParams()
-    self.enable_coasting = self.op_params.get('enable_coasting')
-    self.coast_speed = self.op_params.get('coast_speed') * CV.MPH_TO_MS
     self.always_eval_coast = self.op_params.get('always_eval_coast_plan')
 
   def choose_solution(self, v_cruise_setpoint, enabled):
@@ -149,7 +147,8 @@ class Planner():
         accel_limits_turns[1] = min(accel_limits_turns[1], AWARENESS_DECEL)
         accel_limits_turns[0] = min(accel_limits_turns[0], accel_limits_turns[1])
 
-      if self.enable_coasting:
+      if self.op_params.get(ENABLE_COASTING):
+        self.coast_speed = self.op_params.get(COAST_SPEED) * CV.MPH_TO_MS
         self.v_cruise, self.a_cruise = self.choose_cruise(v_ego,
                                                           a_ego,
                                                           v_cruise_setpoint,
@@ -243,7 +242,7 @@ class Planner():
     self.a_acc_start = a_acc_sol
 
     self.first_loop = False
-  
+
   def choose_cruise(self, v_ego, a_ego, v_cruise_setpoint, accel_limits_turns, jerk_limits, gasbrake):
     # When coasting, reset plans
     if self.longitudinalPlanSource == Source.cruiseCoast:
@@ -268,7 +267,7 @@ class Planner():
     cruise[Source.cruiseGas] = (v_gas, a_gas)
 
     # Brake to (v_cruise_setpoint + COAST_SPEED)
-    # TODO: rethink this for toyota? v_cruise_setpoint has to be lower than 
+    # TODO: rethink this for toyota? v_cruise_setpoint has to be lower than
     # the car's setpoint or the car will engine brake on its own.
     # In other words the max speed (with coasting) is the car's setpoint.
     v_brake, a_brake = speed_smoother(self.v_acc_start, self.a_acc_start,
@@ -290,8 +289,8 @@ class Planner():
       elif (a_brake > a_coast > a_gas):
         self.cruise_plan = Source.cruiseCoast
 
-    cloudlog.info("Cruise Plan %s: ego(%f,%f) gas(%f,%f) coast(%f,%f) brake(%f,%f)", 
-                  self.cruise_plan, v_ego, a_ego, v_gas, a_gas, v_coast, a_coast, 
+    cloudlog.info("Cruise Plan %s: ego(%f,%f) gas(%f,%f) coast(%f,%f) brake(%f,%f)",
+                  self.cruise_plan, v_ego, a_ego, v_gas, a_gas, v_coast, a_coast,
                   v_brake, a_brake)
 
     return cruise[self.cruise_plan]

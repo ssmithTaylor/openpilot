@@ -74,9 +74,10 @@ class opParams:
                         'alca_nudge_required': Param(False, bool, 'Whether to wait for applied torque to the wheel (nudge) before making lane changes. '
                                                                  'If False, lane change will occur IMMEDIATELY after signaling'),
                         'alca_min_speed': Param(20.0, VT.number, 'The minimum speed allowed for an automatic lane change (in MPH)'),
-                        'enable_coasting': Param(False, bool, 'When true the car will try to coast down hills instead of braking.'),
-                        'coast_speed': Param(10.0, VT.number, 'The amount of speed to coast by before applying the brakes. Unit: MPH'),
-                        'setpoint_offset': Param(0, int, 'The difference between the car\'s set cruise speed and OP\'s. Useful for toyotas when coasting. Unit: MPH'),
+                        ENABLE_COASTING: Param(False, bool, 'When true the car will try to coast down hills instead of braking.', live=True),
+                        COAST_SPEED: Param(10.0, VT.number, 'The amount of speed to coast by before applying the brakes. Unit: MPH', live=True),
+                        SETPOINT_OFFSET: Param(0, int, 'The difference between the car\'s set cruise speed and OP\'s. '
+                                                          'Useful for toyotas when coasting. Unit: MPH', live=True),
                         'corolla_use_indi': Param(False, bool),
                         'accel_hyst_gap': Param(0.02, VT.number, live=True),
                         'always_eval_coast_plan': Param(False, bool),
@@ -230,3 +231,7 @@ class opParams:
 
 
 ENABLE_UNSAFE_STEERING_RATE = "enable_unsafe_steering_rate"
+
+ENABLE_COASTING = "enable_coasting"
+COAST_SPEED = "coast_speed"
+SETPOINT_OFFSET = "setpoint_offset"
