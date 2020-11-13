@@ -6,7 +6,7 @@ from common.numpy_fast import clip
 from common.realtime import sec_since_boot, config_realtime_process, Priority, Ratekeeper, DT_CTRL
 from common.profiler import Profiler
 from common.params import Params, put_nonblocking
-from common.op_params import opParams, SETPOINT_OFFSET, COAST_SPEED
+from common.op_params import opParams, SETPOINT_OFFSET, COAST_SPEED, ENABLE_COASTING
 import cereal.messaging as messaging
 from selfdrive.config import Conversions as CV
 from selfdrive.boardd.boardd import can_list_to_can_capnp
@@ -285,7 +285,7 @@ class Controls:
 
     self.setpoint_offset = self.opParams.get(SETPOINT_OFFSET) * CV.MPH_TO_KPH
 
-    if self.is_toyota:
+    if self.is_toyota and self.opParams.get(ENABLE_COASTING):
       coast_speed = self.opParams.get(COAST_SPEED) * CV.MPH_TO_KPH
 
       if coast_speed > self.setpoint_offset:
