@@ -2,7 +2,7 @@
 import math
 import numpy as np
 from common.params import Params
-from common.numpy_fast import interp
+from common.numpy_fast import interp, incremental_avg, mean
 
 import cereal.messaging as messaging
 from cereal import car, log
@@ -92,6 +92,12 @@ class Planner():
     self.op_params = opParams()
     self.always_eval_coast = self.op_params.get('always_eval_coast_plan')
 
+    self.avg_height = 0.0 # Average distance from the camera to the ground in meters
+    self.height_samples = 0
+    self.last_delta_height = 0.0
+
+    self.last_incline = 0.0 # Last incline of the road in radians
+
   def choose_solution(self, v_cruise_setpoint, enabled):
     if enabled:
       solutions = {self.cruise_plan: self.v_cruise}
@@ -149,7 +155,8 @@ class Planner():
 
       if self.op_params.get(ENABLE_COASTING):
         self.coast_speed = self.op_params.get(COAST_SPEED) * CV.MPH_TO_MS
-        self.v_cruise, self.a_cruise = self.choose_cruise(v_ego,
+        self.v_cruise, self.a_cruise = self.choose_cruise(sm,
+                                                          v_ego,
                                                           a_ego,
                                                           v_cruise_setpoint,
                                                           accel_limits_turns,
@@ -243,7 +250,37 @@ class Planner():
 
     self.first_loop = False
 
-  def choose_cruise(self, v_ego, a_ego, v_cruise_setpoint, accel_limits_turns, jerk_limits, gasbrake):
+  def choose_cruise(self, sm, v_ego, a_ego, v_cruise_setpoint, accel_limits_turns, jerk_limits, gasbrake):
+    delta_h = self.last_delta_height
+    incline = self.last_incline
+
+    # Use the new depth net to calculate the incline of the road
+    if sm.updated['modelV2']:
+      md = sm['modelV2']
+
+      if len(md.laneLines):
+        # Get the hights of the camera at each time step from each lane line
+        heights = np.array([ll.z for ll in md.laneLines])
+        # Collapse heights into a 1D array containing the average height at each time step
+        # weighted by the model's confidence in its lane predicitions
+        heights = np.average(heights, axis=0, weights=md.laneLineProbs)
+
+        # x and t are always the same for all lanes so just grab the first one
+        steps = md.laneLines[0].t
+
+        # Get the average forward and heights changes
+        # weighted by time since we're planning for the future
+        delta_x = np.average(md.laneLines[0].x, weights=steps)
+        delta_h = np.average(heights, weights=steps)
+
+        # Get the average height of the camera from the road throughout the drive
+        self.height_samples +=1
+        self.avg_height = incremental_avg(self.avg_height, heights[0], self.height_samples)
+
+        # Get the angle, in radians, between the average and future height of the camera
+        # Negate because a positive angle means we're going downhill
+        incline = -math.atan2(delta_h - self.avg_height, delta_x)
+
     # When coasting, reset plans
     if self.longitudinalPlanSource == Source.cruiseCoast:
       self.v_acc_start = v_ego

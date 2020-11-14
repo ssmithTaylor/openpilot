@@ -24,7 +24,7 @@ def plannerd_thread(sm=None, pm=None):
 
   if sm is None:
     sm = messaging.SubMaster(['carControl', 'carState', 'controlsState', 'radarState', 'model', 'liveParameters'],
-                             poll=['radarState', 'model'])
+                             poll=['radarState', 'model', 'modelV2'])
 
   if pm is None:
     pm = messaging.PubMaster(['plan', 'liveLongitudinalMpc', 'pathPlan', 'liveMpc'])
@@ -40,7 +40,7 @@ def plannerd_thread(sm=None, pm=None):
     if sm.updated['model']:
       PP.update(sm, pm, CP, VM)
     if sm.updated['radarState']:
-      PL.update(sm, pm, CP, VM, PP)
+      PL.update(sm, pm, CP, VM, PP) # TODO look into whether this run when the model updates too
 
 
 def main(sm=None, pm=None):
