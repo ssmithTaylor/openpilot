@@ -94,7 +94,7 @@ class LongControl():
       self.pid.pos_limit = gas_max
       self.pid.neg_limit = - brake_max
 
-      if self.self.op_params.get(ENABLE_COASTING):
+      if self.op_params.get(ENABLE_COASTING):
         no_gas = source in [Source.cruiseBrake, Source.cruiseCoast]
         no_brake = source in [Source.cruiseCoast]
 
