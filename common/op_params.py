@@ -77,6 +77,8 @@ class opParams:
                         ENABLE_COASTING: Param(False, bool, 'When true the car will try to coast down hills instead of braking.', live=True),
                         COAST_SPEED: Param(10.0, VT.number, 'The amount of speed to coast by before applying the brakes. Unit: MPH', live=True),
                         SETPOINT_OFFSET: Param(0, int, 'The difference between the car\'s set cruise speed and OP\'s. Unit: MPH', live=True),
+                        DOWNHILL_INCLINE: Param(-1, VT.number, 'If the angle between the current road and the future predicted road is less than this value, '
+                                                              'the car will try to coast downhill.', live=True),
                         'corolla_use_indi': Param(False, bool),
                         'accel_hyst_gap': Param(0.02, VT.number, live=True),
                         'always_eval_coast_plan': Param(False, bool),
@@ -234,3 +236,4 @@ ENABLE_UNSAFE_STEERING_RATE = "enable_unsafe_steering_rate"
 ENABLE_COASTING = "enable_coasting"
 COAST_SPEED = "coast_speed"
 SETPOINT_OFFSET = "setpoint_offset"
+DOWNHILL_INCLINE = "downhill_incline"

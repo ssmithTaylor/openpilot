@@ -7,7 +7,7 @@ from common.numpy_fast import interp, incremental_avg, mean
 import cereal.messaging as messaging
 from cereal import car, log
 from common.realtime import sec_since_boot
-from common.op_params import opParams, ENABLE_COASTING, COAST_SPEED
+from common.op_params import opParams, ENABLE_COASTING, COAST_SPEED, DOWNHILL_INCLINE
 from selfdrive.swaglog import cloudlog
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.speed_smoother import speed_smoother
@@ -273,7 +273,7 @@ class Planner():
         delta_x = np.average(md.laneLines[0].x, weights=steps)
         delta_h = np.average(heights, weights=steps)
 
-        # Get the average height of the camera from the road throughout the drive
+        # Get the average distance from the camera to the road throughout the drive
         self.height_samples +=1
         self.avg_height = incremental_avg(self.avg_height, heights[0], self.height_samples)
 
@@ -315,10 +315,12 @@ class Planner():
 
     cruise[Source.cruiseBrake] = (v_brake, a_brake)
 
-    accel_hyst_gap = self.op_params.get('accel_hyst_gap')
+    dh_incline = self.opParams.get(DOWNHILL_INCLINE)
+    was_downhill = self.last_incline < dh_incline
+    is_downhill = incline < dh_incline
 
     # Entry conditions
-    if self.always_eval_coast or math.isclose(gasbrake, 0.0) or (gasbrake <= accel_hyst_gap and gasbrake >= -accel_hyst_gap) :
+    if self.always_eval_coast or is_downhill != was_downhill:
       if a_brake < a_coast:
         self.cruise_plan = Source.cruiseBrake
       elif a_gas > a_coast:
