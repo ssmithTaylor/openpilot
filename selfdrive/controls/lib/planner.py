@@ -2,7 +2,7 @@
 import math
 import numpy as np
 from common.params import Params
-from common.numpy_fast import interp, incremental_avg, mean
+from common.numpy_fast import interp, incremental_avg
 
 import cereal.messaging as messaging
 from cereal import car, log
@@ -315,7 +315,7 @@ class Planner():
 
     cruise[Source.cruiseBrake] = (v_brake, a_brake)
 
-    dh_incline = self.opParams.get(DOWNHILL_INCLINE)
+    dh_incline = self.op_params.get(DOWNHILL_INCLINE)
     was_downhill = self.last_incline < dh_incline
     is_downhill = incline < dh_incline
 
