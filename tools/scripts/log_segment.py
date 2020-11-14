@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 import sys
-import os
-import json
 
 from tools.lib.route import Route
 from tools.lib.logreader import LogReader
