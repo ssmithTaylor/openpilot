@@ -40,7 +40,7 @@ def plannerd_thread(sm=None, pm=None):
 
     if sm.updated['model']:
       PP.update(sm, pm, CP, VM)
-    if sm.updated['radarState']:
+    if sm.updated['radarState'] or sm.updated['modelV2']:
       PL.update(sm, pm, CP, VM, PP) # TODO look into whether this should run when the model updates too
 
 

@@ -319,7 +319,7 @@ class Planner():
 
     # Entry conditions
     if self.op_params.get(ALWAYS_EVAL_COAST) or is_downhill != was_downhill:
-      if is_downhill:
+      if is_downhill or v_ego > v_cruise_setpoint:
         self.cruise_plan = Source.cruiseCoast if v_ego < coast_setpoint else Source.cruiseBrake
       else:
         self.cruise_plan = Source.cruiseGas
@@ -327,8 +327,8 @@ class Planner():
     self.last_delta_height = delta_h
     self.last_incline = incline
 
-    cloudlog.info("Cruise Plan %s: ego(%f,%f) gas(%f,%f) coast(%f,%f) brake(%f,%f) delta_h(%f) incline(%f)",
+    cloudlog.info("Cruise Plan %s: ego(%f,%f) gas(%f,%f) coast(%f,%f) brake(%f,%f) delta_h(%f) incline(%f) is_downhill(%s) was_downhill(%s)",
                   self.cruise_plan, v_ego, a_ego, v_gas, a_gas, v_coast, a_coast,
-                  v_brake, a_brake, delta_h, incline)
+                  v_brake, a_brake, delta_h, incline, is_downhill, was_downhill)
 
     return cruise[self.cruise_plan]

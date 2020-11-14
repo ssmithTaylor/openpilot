@@ -82,6 +82,7 @@ class opParams:
                         'corolla_use_indi': Param(False, bool),
                         'accel_hyst_gap': Param(0.02, VT.number, live=True),
                         ALWAYS_EVAL_COAST: Param(False, bool, live=True),
+                        EVAL_COAST_LONG: Param(False, bool, live=True),
                         'gas_max_bp': Param([0., 20, 33], [list, float, int]),
                         'gas_max_v': Param([0.3, 0.2, 0.075], [list, float]),
                         'indi_use_vego_breakpoints': Param(False, bool, live=True),
@@ -238,3 +239,4 @@ COAST_SPEED = "coast_speed"
 SETPOINT_OFFSET = "setpoint_offset"
 DOWNHILL_INCLINE = "downhill_incline"
 ALWAYS_EVAL_COAST = "always_eval_coast_plan"
+EVAL_COAST_LONG = "eval_coast_long_controller"

@@ -1,7 +1,7 @@
 from cereal import log
 from common.numpy_fast import clip, interp
 from selfdrive.controls.lib.pid import PIController
-from common.op_params import opParams, ENABLE_COASTING
+from common.op_params import opParams, ENABLE_COASTING, EVAL_COAST_LONG
 
 LongCtrlState = log.ControlsState.LongControlState
 Source = log.Plan.LongitudinalPlanSource
@@ -94,7 +94,7 @@ class LongControl():
       self.pid.pos_limit = gas_max
       self.pid.neg_limit = - brake_max
 
-      if self.op_params.get(ENABLE_COASTING):
+      if self.op_params.get(ENABLE_COASTING) and self.op_params.get(EVAL_COAST_LONG):
         no_gas = source in [Source.cruiseBrake, Source.cruiseCoast]
         no_brake = source in [Source.cruiseCoast]
 
@@ -103,6 +103,9 @@ class LongControl():
 
         if no_brake:
           self.pid.neg_limit = 0.
+
+        if no_gas and no_brake:
+          self.reset(CS.vEgo)
 
       # Toyota starts braking more when it thinks you want to stop
       # Freeze the integrator so we don't accelerate to compensate, and don't allow positive acceleration
