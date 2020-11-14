@@ -7,7 +7,7 @@ from common.numpy_fast import interp, incremental_avg
 import cereal.messaging as messaging
 from cereal import car, log
 from common.realtime import sec_since_boot
-from common.op_params import opParams, ENABLE_COASTING, COAST_SPEED, DOWNHILL_INCLINE
+from common.op_params import opParams, ENABLE_COASTING, COAST_SPEED, DOWNHILL_INCLINE, ALWAYS_EVAL_COAST
 from selfdrive.swaglog import cloudlog
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.speed_smoother import speed_smoother
@@ -90,7 +90,6 @@ class Planner():
     self.first_loop = True
 
     self.op_params = opParams()
-    self.always_eval_coast = self.op_params.get('always_eval_coast_plan')
 
     self.avg_height = 0.0 # Average distance from the camera to the ground in meters
     self.height_samples = 0
@@ -127,7 +126,6 @@ class Planner():
     cur_time = sec_since_boot()
     v_ego = sm['carState'].vEgo
     a_ego = sm['carState'].aEgo
-    gasbrake = sm['carControl'].actuators.gas - sm['carControl'].actuators.brake
 
     long_control_state = sm['controlsState'].longControlState
     v_cruise_kph = sm['controlsState'].vCruise
@@ -160,8 +158,7 @@ class Planner():
                                                           a_ego,
                                                           v_cruise_setpoint,
                                                           accel_limits_turns,
-                                                          jerk_limits,
-                                                          gasbrake)
+                                                          jerk_limits)
       else:
         self.v_cruise, self.a_cruise = speed_smoother(self.v_acc_start, self.a_acc_start,
                                                     v_cruise_setpoint,
@@ -250,7 +247,7 @@ class Planner():
 
     self.first_loop = False
 
-  def choose_cruise(self, sm, v_ego, a_ego, v_cruise_setpoint, accel_limits_turns, jerk_limits, gasbrake):
+  def choose_cruise(self, sm, v_ego, a_ego, v_cruise_setpoint, accel_limits_turns, jerk_limits):
     delta_h = self.last_delta_height
     incline = self.last_incline
 
@@ -303,33 +300,35 @@ class Planner():
 
     cruise[Source.cruiseGas] = (v_gas, a_gas)
 
+    coast_setpoint = v_cruise_setpoint + self.coast_speed
     # Brake to (v_cruise_setpoint + COAST_SPEED)
     # TODO: rethink this for toyota? v_cruise_setpoint has to be lower than
     # the car's setpoint or the car will engine brake on its own.
     # In other words the max speed (with coasting) is the car's setpoint.
     v_brake, a_brake = speed_smoother(self.v_acc_start, self.a_acc_start,
-                                      v_cruise_setpoint + self.coast_speed,
+                                      coast_setpoint,
                                       accel_limits_turns[1], accel_limits_turns[0],
                                       jerk_limits[1], jerk_limits[0],
                                       LON_MPC_STEP)
 
     cruise[Source.cruiseBrake] = (v_brake, a_brake)
 
-    dh_incline = self.op_params.get(DOWNHILL_INCLINE)
+    dh_incline = math.radians(self.op_params.get(DOWNHILL_INCLINE))
     was_downhill = self.last_incline < dh_incline
     is_downhill = incline < dh_incline
 
     # Entry conditions
-    if self.always_eval_coast or is_downhill != was_downhill:
-      if a_brake < a_coast:
-        self.cruise_plan = Source.cruiseBrake
-      elif a_gas > a_coast:
-        self.cruise_plan = Source.cruiseGas if v_gas < v_cruise_setpoint else Source.cruiseCoast
-      elif (a_brake > a_coast > a_gas):
-        self.cruise_plan = Source.cruiseCoast
+    if self.op_params.get(ALWAYS_EVAL_COAST) or is_downhill != was_downhill:
+      if is_downhill:
+        self.cruise_plan = Source.cruiseCoast if v_ego < coast_setpoint else Source.cruiseBrake
+      else:
+        self.cruise_plan = Source.cruiseGas
 
-    cloudlog.info("Cruise Plan %s: ego(%f,%f) gas(%f,%f) coast(%f,%f) brake(%f,%f)",
+    self.last_delta_height = delta_h
+    self.last_incline = incline
+
+    cloudlog.info("Cruise Plan %s: ego(%f,%f) gas(%f,%f) coast(%f,%f) brake(%f,%f) delta_h(%f) incline(%f)",
                   self.cruise_plan, v_ego, a_ego, v_gas, a_gas, v_coast, a_coast,
-                  v_brake, a_brake)
+                  v_brake, a_brake, delta_h, incline)
 
     return cruise[self.cruise_plan]

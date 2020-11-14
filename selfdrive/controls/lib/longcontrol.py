@@ -1,7 +1,7 @@
 from cereal import log
 from common.numpy_fast import clip, interp
 from selfdrive.controls.lib.pid import PIController
-from common.op_params import opParams
+from common.op_params import opParams, ENABLE_COASTING
 
 LongCtrlState = log.ControlsState.LongControlState
 Source = log.Plan.LongitudinalPlanSource
@@ -63,8 +63,7 @@ class LongControl():
                             convert=compute_gb)
     self.v_pid = 0.0
     self.last_output_gb = 0.0
-    self.opParams = opParams()
-    self.enable_coasting = self.opParams.get('enable_coasting')
+    self.op_params = opParams()
 
   def reset(self, v_pid):
     """Reset PID controller and change setpoint"""
@@ -95,10 +94,10 @@ class LongControl():
       self.pid.pos_limit = gas_max
       self.pid.neg_limit = - brake_max
 
-      if self.enable_coasting:
+      if self.self.op_params.get(ENABLE_COASTING):
         no_gas = source in [Source.cruiseBrake, Source.cruiseCoast]
-        no_brake = source in [Source.cruiseGas, Source.cruiseCoast]
-        
+        no_brake = source in [Source.cruiseCoast]
+
         if no_gas:
           self.pid.pos_limit = 0.
 
@@ -114,9 +113,6 @@ class LongControl():
 
       if prevent_overshoot:
         output_gb = min(output_gb, 0.0)
-
-      if self.enable_coasting and no_gas and self.last_output_gb > 0.0:
-        output_gb = min(-self.last_output_gb, output_gb)
 
     # Intention is to stop, switch to a different brake control until we stop
     elif self.long_control_state == LongCtrlState.stopping:
