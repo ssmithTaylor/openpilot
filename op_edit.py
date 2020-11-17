@@ -106,7 +106,7 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
         if indent == 0:
           last_key = param
           last_info = info
-          
+
 
       extras = {'a': ('Add new parameter', COLORS.OKGREEN),
                 'd': ('Delete parameter', COLORS.FAIL),
@@ -118,7 +118,7 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
       self.prompt('\nChoose a parameter to edit (by index or name):')
 
       choice = input('>> ').strip().lower()
-      parsed, choice = self.parse_choice(choice, len(to_print) - len(extras))
+      parsed, choice = self.parse_choice(choice, len(self.params) + len(extras))
       if parsed == 'continue':
         continue
       elif parsed == 'add':
@@ -387,7 +387,7 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
 
   def sort_params(self, kv):
     return self.get_sort_key(kv[0])
-  
+
   def get_sort_key(self, k):
     p = self.op_params.param_info(k)
 
