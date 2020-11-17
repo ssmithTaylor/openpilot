@@ -86,7 +86,7 @@ class opParams:
                         'accel_hyst_gap': Param(0.02, VT.number, live=True),
                         ALWAYS_EVAL_COAST: Param(False, bool, live=True, depends_on=ENABLE_COASTING),
                         EVAL_COAST_LONG: Param(False, bool, live=True, depends_on=ENABLE_COASTING),
-                        ENABLE_LONG_PARAMS: Param(True, bool, live=True, description='When true the long controller will used the params in opParam '
+                        ENABLE_LONG_PARAMS: Param(False, bool, live=True, description='When true the long controller will used the params in opParam '
                                                   'instead of the car\' params'),
                         ENABLE_GAS_PARAMS: Param(True, bool, live=True, depends_on=ENABLE_LONG_PARAMS),
                         GAS_MAX_BP: Param([0., 20, 33], [list, float, int], live=True, depends_on=ENABLE_GAS_PARAMS),
