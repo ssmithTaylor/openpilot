@@ -79,20 +79,26 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
       to_print = []
       blue_gradient = [33, 39, 45, 51, 87]
       last_depend = None
+      shown_dots = False
       for idx, param in enumerate(self.params):
         info = self.op_params.param_info(param)
+        line = ''
         if not info.depends_on or self.op_params.get(info.depends_on):
           line = '{}. {}: {}  {}'.format(idx + 1, param, values_list[idx], live[idx])
-        else:
-          line = '.'
-        if idx == self.last_choice and self.last_choice is not None:
-          line = COLORS.OKGREEN + line
-        else:
-          _color = blue_gradient[min(round(idx / len(self.params) * len(blue_gradient)), len(blue_gradient) - 1)]
-          line = COLORS.BASE(_color) + line
-        if last_depend and info.depends_on != last_depend:
-          line = '\n' + line
-        to_print.append(line)
+        elif not shown_dots:
+          line = '...'
+          shown_dots = True
+        if line:
+          if idx == self.last_choice and self.last_choice is not None:
+            line = COLORS.OKGREEN + line
+          else:
+            _color = blue_gradient[min(round(idx / len(self.params) * len(blue_gradient)), len(blue_gradient) - 1)]
+            line = COLORS.BASE(_color) + line
+          if last_depend and info.depends_on != last_depend:
+            line = '\n' + line
+            shown_dots = False
+          to_print.append(line)
+
         last_depend = info.depends_on
 
       extras = {'a': ('Add new parameter', COLORS.OKGREEN),
