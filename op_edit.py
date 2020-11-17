@@ -226,31 +226,53 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
   def change_param_list(self, old_value, param_info, chosen_key):
     while True:
       self.info('Current value: {} (type: {})'.format(old_value, type(old_value).__name__), sleep_time=0)
-      self.prompt('\nEnter index to edit (0 to {}):'.format(len(old_value) - 1))
-      choice_idx = self.str_eval(input('>> '))
+      self.prompt('\nEnter index to edit (0 to {}), or -i to remove, or +value to append:'.format(len(old_value) - 1))
+
+      append_val = False
+      remove_idx = False
+      choice_idx = input('>> ')
+
       if choice_idx == '':
         self.info('Exiting this parameter...', 0.5)
         return
 
-      if not isinstance(choice_idx, int) or choice_idx not in range(len(old_value)):
+      if isinstance(choice_idx, str):
+        if choice_idx[0] == '-':
+          remove_idx = True
+        if choice_idx[0] == '+':
+          append_val = True
+
+      if append_val or remove_idx:
+        choice_idx = choice_idx[1::]
+
+      choice_idx = self.str_eval(choice_idx)
+
+      if not append_val and (not isinstance(choice_idx, int) or choice_idx not in range(len(old_value))):
         self.error('Must be an integar within list range!')
         continue
 
       while True:
-        self.info('Chosen index: {}'.format(choice_idx), sleep_time=0)
-        self.info('Value: {} (type: {})'.format(old_value[choice_idx], type(old_value[choice_idx]).__name__), sleep_time=0)
-        self.prompt('\nEnter your new value:')
-        new_value = input('>> ').strip()
+        if append_val:
+          new_value = choice_idx
+        else:
+          self.info('Chosen index: {}'.format(choice_idx), sleep_time=0)
+          self.info('Value: {} (type: {})'.format(old_value[choice_idx], type(old_value[choice_idx]).__name__), sleep_time=0)
+          self.prompt('\nEnter your new value:')
+          new_value = input('>> ').strip()
+          new_value = self.str_eval(new_value)
+
         if new_value == '':
           self.info('Exiting this list item...', 0.5)
           break
 
-        new_value = self.str_eval(new_value)
         if not param_info.is_valid(new_value):
           self.error('The type of data you entered ({}) is not allowed with this parameter!'.format(type(new_value).__name__))
           continue
 
-        old_value[choice_idx] = new_value
+        if append_val:
+          old_value.append(new_value)
+        else:
+          old_value[choice_idx] = new_value
 
         self.op_params.put(chosen_key, old_value)
         self.success('Saved {} with value: {}! (type: {})'.format(chosen_key, new_value, type(new_value).__name__), end='\n')
