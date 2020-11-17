@@ -87,22 +87,24 @@ class opParams:
                         EVAL_COAST_LONG: Param(False, bool, live=True, depends_on=ENABLE_COASTING),
                         'gas_max_bp': Param([0., 20, 33], [list, float, int]),
                         'gas_max_v': Param([0.3, 0.2, 0.075], [list, float]),
-                        'indi_use_vego_breakpoints': Param(False, bool, live=True),
-                        'indi_use_steer_angle_breakpoints': Param(False, bool, live=True),
-                        'indi_inner_gain_bp': Param([0, 255, 255], [list, float, int], live=True),
-                        'indi_inner_gain_v': Param([6.0, 6.0, 6.0], [list, float, int], live=True),
-                        'indi_outer_gain_bp': Param([0, 255, 255], [list, float, int], live=True),
-                        'indi_outer_gain_v': Param([15, 15, 15], [list, float, int], live=True),
-                        'indi_time_constant_bp': Param([0, 255, 255], [list, float, int], live=True),
-                        'indi_time_constant_v': Param([5.5, 5.5, 5.5], [list, float, int], live=True),
-                        'indi_actuator_effectiveness_bp': Param([0, 255, 255], [list, float, int], live=True),
-                        'indi_actuator_effectiveness_v': Param([6, 6, 6], [list, float, int], live=True),
-                        'a_cruise_min_bp': Param([0.0, 5.0, 10.0, 20.0, 55.0], [list, float], live=True),
-                        'a_cruise_min_v': Param([-1.0, -0.7, -0.6, -0.5, -0.3], [list, float], live=True),
-                        'a_cruise_min_v_following': Param([-3.0, -2.5, -2.0, -1.5, -1.0], [list, float], live=True),
-                        'a_cruise_max_bp': Param([0., 5., 10., 20., 55.], [list, float], live=True),
-                        'a_cruise_max_v': Param([0.8, 0.9, 1.0, 0.4, 0.2], [list, float], live=True),
-                        'a_cruise_max_v_following': Param([1.6, 1.4, 1.4, .7, .3], [list, float], live=True),
+                        INDI_SHOW_BREAKPOINTS: Param(False, bool, live=True),
+                        'indi_use_vego_breakpoints': Param(False, bool, live=True, depends_on=INDI_SHOW_BREAKPOINTS),
+                        'indi_use_steer_angle_breakpoints': Param(False, bool, live=True, depends_on=INDI_SHOW_BREAKPOINTS),
+                        'indi_inner_gain_bp': Param([0, 255, 255], [list, float, int], live=True, depends_on=INDI_SHOW_BREAKPOINTS),
+                        'indi_inner_gain_v': Param([6.0, 6.0, 6.0], [list, float, int], live=True, depends_on=INDI_SHOW_BREAKPOINTS),
+                        'indi_outer_gain_bp': Param([0, 255, 255], [list, float, int], live=True, depends_on=INDI_SHOW_BREAKPOINTS),
+                        'indi_outer_gain_v': Param([15, 15, 15], [list, float, int], live=True, depends_on=INDI_SHOW_BREAKPOINTS),
+                        'indi_time_constant_bp': Param([0, 255, 255], [list, float, int], live=True, depends_on=INDI_SHOW_BREAKPOINTS),
+                        'indi_time_constant_v': Param([5.5, 5.5, 5.5], [list, float, int], live=True, depends_on=INDI_SHOW_BREAKPOINTS),
+                        'indi_actuator_effectiveness_bp': Param([0, 255, 255], [list, float, int], live=True, depends_on=INDI_SHOW_BREAKPOINTS),
+                        'indi_actuator_effectiveness_v': Param([6, 6, 6], [list, float, int], live=True, depends_on=INDI_SHOW_BREAKPOINTS),
+                        SHOW_A_CRUISE: Param(False, bool, live=True),
+                        'a_cruise_min_bp': Param([0.0, 5.0, 10.0, 20.0, 55.0], [list, float], live=True, depends_on=SHOW_A_CRUISE),
+                        'a_cruise_min_v': Param([-1.0, -0.7, -0.6, -0.5, -0.3], [list, float], live=True, depends_on=SHOW_A_CRUISE),
+                        'a_cruise_min_v_following': Param([-3.0, -2.5, -2.0, -1.5, -1.0], [list, float], live=True, depends_on=SHOW_A_CRUISE),
+                        'a_cruise_max_bp': Param([0., 5., 10., 20., 55.], [list, float], live=True, depends_on=SHOW_A_CRUISE),
+                        'a_cruise_max_v': Param([0.8, 0.9, 1.0, 0.4, 0.2], [list, float], live=True, depends_on=SHOW_A_CRUISE),
+                        'a_cruise_max_v_following': Param([1.6, 1.4, 1.4, .7, .3], [list, float], live=True, depends_on=SHOW_A_CRUISE),
                         ENABLE_UNSAFE_STEERING_RATE: Param(False, bool)}
 
     self._params_file = '/data/op_params.json'
@@ -242,3 +244,7 @@ SETPOINT_OFFSET = "setpoint_offset"
 DOWNHILL_INCLINE = "downhill_incline"
 ALWAYS_EVAL_COAST = "always_eval_coast_plan"
 EVAL_COAST_LONG = "eval_coast_long_controller"
+
+INDI_SHOW_BREAKPOINTS = 'indi_show_breakpoint_opts'
+
+SHOW_A_CRUISE = 'a_cruise_show_opts'
