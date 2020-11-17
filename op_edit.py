@@ -226,7 +226,7 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
   def change_param_list(self, old_value, param_info, chosen_key):
     while True:
       self.info('Current value: {} (type: {})'.format(old_value, type(old_value).__name__), sleep_time=0)
-      self.prompt('\nEnter index to edit (0 to {}), or -i to remove, or +value to append:'.format(len(old_value) - 1))
+      self.prompt('\nEnter index to edit (0 to {}), or -i to remove index, or +value to append value:'.format(len(old_value) - 1))
 
       append_val = False
       remove_idx = False
@@ -252,7 +252,7 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
         continue
 
       while True:
-        if append_val:
+        if append_val or remove_idx:
           new_value = choice_idx
         else:
           self.info('Chosen index: {}'.format(choice_idx), sleep_time=0)
@@ -267,10 +267,12 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
 
         if not param_info.is_valid(new_value):
           self.error('The type of data you entered ({}) is not allowed with this parameter!'.format(type(new_value).__name__))
-          continue
+          break
 
         if append_val:
           old_value.append(new_value)
+        elif remove_idx:
+          del old_value[choice_idx]
         else:
           old_value[choice_idx] = new_value
 
