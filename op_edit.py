@@ -320,9 +320,9 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
     except:
       if dat.lower() == 'none':
         dat = None
-      elif dat.lower() == 'false':
+      elif dat.lower() in ['false', 'f']:
         dat = False
-      elif dat.lower() == 'true':  # else, assume string
+      elif dat.lower() in ['true', 't']:  # else, assume string
         dat = True
     return dat
 
