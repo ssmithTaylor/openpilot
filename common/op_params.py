@@ -85,8 +85,10 @@ class opParams:
                         'accel_hyst_gap': Param(0.02, VT.number, live=True),
                         ALWAYS_EVAL_COAST: Param(False, bool, live=True, depends_on=ENABLE_COASTING),
                         EVAL_COAST_LONG: Param(False, bool, live=True, depends_on=ENABLE_COASTING),
-                        'gas_max_bp': Param([0., 20, 33], [list, float, int]),
-                        'gas_max_v': Param([0.3, 0.2, 0.075], [list, float]),
+                        ENABLE_LONG_PARAMS: Param(True, bool, live=True, description='When true the long controller will used the params in opParam '
+                                                  'instead of the car\' params'),
+                        GAS_MAX_BP: Param([0., 20, 33], [list, float, int], live=True, depends_on=ENABLE_LONG_PARAMS),
+                        GAS_MAX_V: Param([0.3, 0.2, 0.075], [list, float], live=True, depends_on=ENABLE_LONG_PARAMS),
                         INDI_SHOW_BREAKPOINTS: Param(False, bool, live=True),
                         'indi_use_vego_breakpoints': Param(False, bool, live=True, depends_on=INDI_SHOW_BREAKPOINTS),
                         'indi_use_steer_angle_breakpoints': Param(False, bool, live=True, depends_on=INDI_SHOW_BREAKPOINTS),
@@ -248,3 +250,7 @@ EVAL_COAST_LONG = "eval_coast_long_controller"
 INDI_SHOW_BREAKPOINTS = 'indi_show_breakpoint_opts'
 
 SHOW_A_CRUISE = 'a_cruise_show_opts'
+
+ENABLE_LONG_PARAMS = 'enable_long_params'
+GAS_MAX_BP = 'gas_max_bp'
+GAS_MAX_V = 'gas_max_v'

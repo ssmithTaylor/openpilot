@@ -1,7 +1,7 @@
 from cereal import log
 from common.numpy_fast import clip, interp
 from selfdrive.controls.lib.pid import PIController
-from common.op_params import opParams, ENABLE_COASTING, EVAL_COAST_LONG
+from common.op_params import opParams, ENABLE_COASTING, EVAL_COAST_LONG, ENABLE_LONG_PARAMS, GAS_MAX_BP, GAS_MAX_V
 
 LongCtrlState = log.ControlsState.LongControlState
 Source = log.Plan.LongitudinalPlanSource
@@ -73,7 +73,14 @@ class LongControl():
   def update(self, active, CS, v_target, v_target_future, a_target, CP, source):
     """Update longitudinal control. This updates the state machine and runs a PID loop"""
     # Actuation limits
-    gas_max = interp(CS.vEgo, CP.gasMaxBP, CP.gasMaxV)
+    gm_bp = CP.gasMaxBP
+    gm_v = CP.gasMaxV
+
+    if self.op_params.get(ENABLE_LONG_PARAMS):
+      gm_bp = self.op_params.get(GAS_MAX_BP)
+      gm_v = self.op_params.get(GAS_MAX_V)
+
+    gas_max = interp(CS.vEgo, gm_bp, gm_v)
     brake_max = interp(CS.vEgo, CP.brakeMaxBP, CP.brakeMaxV)
 
     # Update state machine
