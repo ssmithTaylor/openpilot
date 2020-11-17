@@ -78,13 +78,14 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
 
       to_print = []
       blue_gradient = [33, 39, 45, 51, 87]
-      last_depend = None
+      last_depend = ''
       shown_dots = False
       for idx, param in enumerate(self.params):
         info = self.op_params.param_info(param)
         line = ''
         if not info.depends_on or self.op_params.get(info.depends_on):
           line = '{}. {}: {}  {}'.format(idx + 1, param, values_list[idx], live[idx])
+          line = self.get_sort_key(param).count(',') * '.' + line
         elif not shown_dots:
           line = '...'
           shown_dots = True
@@ -94,7 +95,7 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
           else:
             _color = blue_gradient[min(round(idx / len(self.params) * len(blue_gradient)), len(blue_gradient) - 1)]
             line = COLORS.BASE(_color) + line
-          if last_depend and info.depends_on != last_depend:
+          if last_depend and (not info.depends_on or info.depends_on in last_depend):
             line = '\n' + line
             shown_dots = False
           to_print.append(line)
@@ -379,15 +380,23 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
       return
 
   def sort_params(self, kv):
-    k = kv[0]
+    return self.get_sort_key(kv[0])
+  
+  def get_sort_key(self, k):
     p = self.op_params.param_info(k)
-    order = 1
 
-    for key in self.params.keys():
-      if self.op_params.param_info(key).depends_on == k:
-        order = 0
-        break
-
-    return f'{order}{k}' if not p.depends_on else f'{0}{p.depends_on}{k}'
+    if not p.depends_on:
+      order = 1
+      for key in self.params.keys():
+        if self.op_params.param_info(key).depends_on == k:
+          order = 0
+          break
+      return f'{order}{k}'
+    else:
+      s = ''
+      while p.depends_on:
+        s = f'{p.depends_on},{s}'
+        p = self.op_params.param_info(p.depends_on)
+      return f'{0}{s}{k}'
 
 opEdit()
