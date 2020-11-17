@@ -58,3 +58,6 @@ def offset_v_cruise(v_cruise, last_cruise, offset):
     return int(round(clip(v_cruise - offset, V_CRUISE_MIN, V_CRUISE_MAX)))
 
   return v_cruise
+
+def is_toyota(CP):
+  return CP.carName == "toyota"

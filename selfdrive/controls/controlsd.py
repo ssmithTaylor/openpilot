@@ -6,13 +6,13 @@ from common.numpy_fast import clip
 from common.realtime import sec_since_boot, config_realtime_process, Priority, Ratekeeper, DT_CTRL
 from common.profiler import Profiler
 from common.params import Params, put_nonblocking
-from common.op_params import opParams
+from common.op_params import opParams, SETPOINT_OFFSET, COAST_SPEED, ENABLE_COASTING
 import cereal.messaging as messaging
 from selfdrive.config import Conversions as CV
 from selfdrive.boardd.boardd import can_list_to_can_capnp
 from selfdrive.car.car_helpers import get_car, get_startup_event, get_one_can
 from selfdrive.controls.lib.lane_planner import CAMERA_OFFSET
-from selfdrive.controls.lib.drive_helpers import update_v_cruise, initialize_v_cruise, offset_v_cruise
+from selfdrive.controls.lib.drive_helpers import update_v_cruise, initialize_v_cruise, offset_v_cruise, is_toyota
 from selfdrive.controls.lib.longcontrol import LongControl, STARTING_TARGET_SPEED
 from selfdrive.controls.lib.latcontrol_pid import LatControlPID
 from selfdrive.controls.lib.latcontrol_indi import LatControlINDI
@@ -149,7 +149,8 @@ class Controls:
     self.prof = Profiler(False)  # off by default
 
     self.opParams = opParams()
-    self.setpoint_offset = self.opParams.get('setpoint_offset') * CV.MPH_TO_KPH
+    self.setpoint_offset = 0.0
+    self.is_toyota = is_toyota(self.CP)
 
   def update_events(self, CS):
     """Compute carEvents from carState"""
@@ -281,6 +282,14 @@ class Controls:
       self.v_cruise_kph = update_v_cruise(self.v_cruise_kph, CS.buttonEvents, self.enabled)
     elif self.CP.enableCruise and CS.cruiseState.enabled:
       self.v_cruise_kph = CS.cruiseState.speed * CV.MS_TO_KPH
+
+    self.setpoint_offset = self.opParams.get(SETPOINT_OFFSET) * CV.MPH_TO_KPH
+
+    if self.is_toyota and self.opParams.get(ENABLE_COASTING):
+      coast_speed = self.opParams.get(COAST_SPEED) * CV.MPH_TO_KPH
+
+      if coast_speed > self.setpoint_offset:
+        self.setpoint_offset = coast_speed
 
     self.v_cruise_kph = offset_v_cruise(self.v_cruise_kph, self.v_cruise_kph_last, self.setpoint_offset)
 

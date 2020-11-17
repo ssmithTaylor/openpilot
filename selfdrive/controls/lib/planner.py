@@ -2,12 +2,12 @@
 import math
 import numpy as np
 from common.params import Params
-from common.numpy_fast import interp
+from common.numpy_fast import interp, incremental_avg
 
 import cereal.messaging as messaging
 from cereal import car, log
 from common.realtime import sec_since_boot
-from common.op_params import opParams
+from common.op_params import opParams, ENABLE_COASTING, COAST_SPEED, DOWNHILL_INCLINE, ALWAYS_EVAL_COAST
 from selfdrive.swaglog import cloudlog
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.speed_smoother import speed_smoother
@@ -47,7 +47,7 @@ def calc_cruise_accel_limits(v_ego, following, op_params):
 
   a_cruise_min = interp(v_ego, op_params.get('a_cruise_min_bp'), op_params.get(min_key))
   a_cruise_max = interp(v_ego, op_params.get('a_cruise_max_bp'), op_params.get(max_key))
-  
+
   return np.vstack([a_cruise_min, a_cruise_max])
 
 
@@ -90,9 +90,13 @@ class Planner():
     self.first_loop = True
 
     self.op_params = opParams()
-    self.enable_coasting = self.op_params.get('enable_coasting')
-    self.coast_speed = self.op_params.get('coast_speed') * CV.MPH_TO_MS
-    self.always_eval_coast = self.op_params.get('always_eval_coast_plan')
+
+    self.avg_height = 0.0 # Average distance from the camera to the ground in meters
+    self.height_samples = 0
+    self.last_delta_height = 0.0
+
+    self.last_incline = 0.0 # Last incline of the road in radians
+    self.was_downhill = False
 
   def choose_solution(self, v_cruise_setpoint, enabled):
     if enabled:
@@ -123,7 +127,6 @@ class Planner():
     cur_time = sec_since_boot()
     v_ego = sm['carState'].vEgo
     a_ego = sm['carState'].aEgo
-    gasbrake = sm['carControl'].actuators.gas - sm['carControl'].actuators.brake
 
     long_control_state = sm['controlsState'].longControlState
     v_cruise_kph = sm['controlsState'].vCruise
@@ -149,13 +152,14 @@ class Planner():
         accel_limits_turns[1] = min(accel_limits_turns[1], AWARENESS_DECEL)
         accel_limits_turns[0] = min(accel_limits_turns[0], accel_limits_turns[1])
 
-      if self.enable_coasting:
-        self.v_cruise, self.a_cruise = self.choose_cruise(v_ego,
+      if self.op_params.get(ENABLE_COASTING):
+        self.coast_speed = self.op_params.get(COAST_SPEED) * CV.MPH_TO_MS
+        self.v_cruise, self.a_cruise = self.choose_cruise(sm,
+                                                          v_ego,
                                                           a_ego,
                                                           v_cruise_setpoint,
                                                           accel_limits_turns,
-                                                          jerk_limits,
-                                                          gasbrake)
+                                                          jerk_limits)
       else:
         self.v_cruise, self.a_cruise = speed_smoother(self.v_acc_start, self.a_acc_start,
                                                     v_cruise_setpoint,
@@ -243,8 +247,38 @@ class Planner():
     self.a_acc_start = a_acc_sol
 
     self.first_loop = False
-  
-  def choose_cruise(self, v_ego, a_ego, v_cruise_setpoint, accel_limits_turns, jerk_limits, gasbrake):
+
+  def choose_cruise(self, sm, v_ego, a_ego, v_cruise_setpoint, accel_limits_turns, jerk_limits):
+    delta_h = self.last_delta_height
+    incline = self.last_incline
+
+    # Use the new depth net to calculate the incline of the road
+    if sm.updated['modelV2']:
+      md = sm['modelV2']
+
+      if len(md.laneLines):
+        # Get the hights of the camera at each time step from each lane line
+        heights = np.array([ll.z for ll in md.laneLines])
+        # Collapse heights into a 1D array containing the average height at each time step
+        # weighted by the model's confidence in its lane predicitions
+        heights = np.average(heights, axis=0, weights=md.laneLineProbs)
+
+        # x and t are always the same for all lanes so just grab the first one
+        steps = md.laneLines[0].t
+
+        # Get the average forward and heights changes
+        # weighted by time since we're planning for the future
+        delta_x = np.average(md.laneLines[0].x, weights=steps)
+        delta_h = np.average(heights, weights=steps)
+
+        # Get the average distance from the camera to the road throughout the drive
+        self.height_samples +=1
+        self.avg_height = incremental_avg(self.avg_height, heights[0], self.height_samples)
+
+        # Get the angle, in radians, between the average and future height of the camera
+        # Negate because a positive angle means we're going downhill
+        incline = -math.atan2(delta_h - self.avg_height, delta_x)
+
     # When coasting, reset plans
     if self.longitudinalPlanSource == Source.cruiseCoast:
       self.v_acc_start = v_ego
@@ -267,31 +301,35 @@ class Planner():
 
     cruise[Source.cruiseGas] = (v_gas, a_gas)
 
+    coast_setpoint = v_cruise_setpoint + self.coast_speed
     # Brake to (v_cruise_setpoint + COAST_SPEED)
-    # TODO: rethink this for toyota? v_cruise_setpoint has to be lower than 
+    # TODO: rethink this for toyota? v_cruise_setpoint has to be lower than
     # the car's setpoint or the car will engine brake on its own.
     # In other words the max speed (with coasting) is the car's setpoint.
     v_brake, a_brake = speed_smoother(self.v_acc_start, self.a_acc_start,
-                                      v_cruise_setpoint + self.coast_speed,
+                                      coast_setpoint,
                                       accel_limits_turns[1], accel_limits_turns[0],
                                       jerk_limits[1], jerk_limits[0],
                                       LON_MPC_STEP)
 
     cruise[Source.cruiseBrake] = (v_brake, a_brake)
 
-    accel_hyst_gap = self.op_params.get('accel_hyst_gap')
+    dh_incline = math.radians(self.op_params.get(DOWNHILL_INCLINE))
+    is_downhill = incline < dh_incline or v_ego > v_cruise_setpoint
 
     # Entry conditions
-    if self.always_eval_coast or math.isclose(gasbrake, 0.0) or (gasbrake <= accel_hyst_gap and gasbrake >= -accel_hyst_gap) :
-      if a_brake < a_coast:
-        self.cruise_plan = Source.cruiseBrake
-      elif a_gas > a_coast:
-        self.cruise_plan = Source.cruiseGas if v_gas < v_cruise_setpoint else Source.cruiseCoast
-      elif (a_brake > a_coast > a_gas):
-        self.cruise_plan = Source.cruiseCoast
+    if self.op_params.get(ALWAYS_EVAL_COAST) or is_downhill or is_downhill != self.was_downhill:
+      if is_downhill:
+        self.cruise_plan = Source.cruiseCoast if v_ego < coast_setpoint else Source.cruiseBrake
+      else:
+        self.cruise_plan = Source.cruiseGas
 
-    cloudlog.info("Cruise Plan %s: ego(%f,%f) gas(%f,%f) coast(%f,%f) brake(%f,%f)", 
-                  self.cruise_plan, v_ego, a_ego, v_gas, a_gas, v_coast, a_coast, 
-                  v_brake, a_brake)
+    cloudlog.info("Cruise Plan %s: ego(%f,%f) gas(%f,%f) coast(%f,%f) brake(%f,%f) delta_h(%f) incline(%f) is_downhill(%s) was_downhill(%s)",
+                  self.cruise_plan, v_ego, a_ego, v_gas, a_gas, v_coast, a_coast,
+                  v_brake, a_brake, delta_h, incline, is_downhill, self.was_downhill)
+
+    self.last_delta_height = delta_h
+    self.last_incline = incline
+    self.was_downhill = is_downhill
 
     return cruise[self.cruise_plan]
