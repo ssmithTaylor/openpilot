@@ -1,7 +1,7 @@
 from cereal import log
 from common.numpy_fast import clip, interp
 from selfdrive.controls.lib.pid import PIController
-from common.op_params import opParams, ENABLE_COASTING, EVAL_COAST_LONG, ENABLE_LONG_PARAMS, GAS_MAX_BP, GAS_MAX_V
+from common.op_params import opParams, ENABLE_COASTING, EVAL_COAST_LONG, ENABLE_LONG_PARAMS, GAS_MAX_BP, GAS_MAX_V, ENABLE_BRAKE_PARAMS, ENABLE_GAS_PARAMS, BRAKE_MAX_BP, BRAKE_MAX_V
 
 LongCtrlState = log.ControlsState.LongControlState
 Source = log.Plan.LongitudinalPlanSource
@@ -75,13 +75,19 @@ class LongControl():
     # Actuation limits
     gm_bp = CP.gasMaxBP
     gm_v = CP.gasMaxV
+    bm_bp = CP.brakeMaxBP
+    bm_v = CP.brakeMaxV
 
     if self.op_params.get(ENABLE_LONG_PARAMS):
-      gm_bp = self.op_params.get(GAS_MAX_BP)
-      gm_v = self.op_params.get(GAS_MAX_V)
+      if self.op_params.get(ENABLE_GAS_PARAMS):
+        gm_bp = self.op_params.get(GAS_MAX_BP)
+        gm_v = self.op_params.get(GAS_MAX_V)
+      if self.op_params.get(ENABLE_BRAKE_PARAMS):
+        bm_bp = self.op_params.get(BRAKE_MAX_BP)
+        bm_v = self.op_params.get(BRAKE_MAX_V)
 
     gas_max = interp(CS.vEgo, gm_bp, gm_v)
-    brake_max = interp(CS.vEgo, CP.brakeMaxBP, CP.brakeMaxV)
+    brake_max = interp(CS.vEgo, bm_bp, bm_v)
 
     # Update state machine
     output_gb = self.last_output_gb
