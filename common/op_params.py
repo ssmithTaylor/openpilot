@@ -34,7 +34,13 @@ class Param:
   def is_valid(self, value):
     if not self.has_allowed_types:
       return True
-    return type(value) in self.allowed_types
+    if not self.is_list:
+      return type(value) in self.allowed_types
+    else:
+      for v in value:
+        if type(v) not in self.allowed_types:
+          return False
+      return True
 
   def _create_attrs(self):  # Create attributes and check Param is valid
     self.has_allowed_types = isinstance(self.allowed_types, list) and len(self.allowed_types) > 0
@@ -46,8 +52,6 @@ class Param:
       if self.is_list:
         for v in self.default:
           assert type(v) in self.allowed_types, 'Default value type must be in specified allowed_types!'
-    # if self.is_list:
-    #   self.allowed_types.remove(list)
 
 
 class opParams:
@@ -77,7 +81,7 @@ class opParams:
                                                                  'If False, lane change will occur IMMEDIATELY after signaling'),
                         'alca_min_speed': Param(20.0, VT.number, 'The minimum speed allowed for an automatic lane change (in MPH)'),
                         ENABLE_COASTING: Param(False, bool, 'When true the car will try to coast down hills instead of braking.', live=True),
-                        COAST_SPEED: Param(10.0, VT.number, 'The amount of speed to coast by before applying the brakes. Unit: MPH', 
+                        COAST_SPEED: Param(10.0, VT.number, 'The amount of speed to coast by before applying the brakes. Unit: MPH',
                                           live=True, depends_on=ENABLE_COASTING),
                         SETPOINT_OFFSET: Param(0, int, 'The difference between the car\'s set cruise speed and OP\'s. Unit: MPH', live=True),
                         DOWNHILL_INCLINE: Param(-1, VT.number, 'If the angle between the current road and the future predicted road is less than this value, '
