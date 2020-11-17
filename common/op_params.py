@@ -87,7 +87,7 @@ class opParams:
                         EVAL_COAST_LONG: Param(False, bool, live=True, depends_on=ENABLE_COASTING),
                         ENABLE_LONG_PARAMS: Param(True, bool, live=True, description='When true the long controller will used the params in opParam '
                                                   'instead of the car\' params'),
-                        ENABLE_GAS_PARAMS: Param(False, bool, live=True, depends_on=ENABLE_LONG_PARAMS),
+                        ENABLE_GAS_PARAMS: Param(True, bool, live=True, depends_on=ENABLE_LONG_PARAMS),
                         GAS_MAX_BP: Param([0., 20, 33], [list, float, int], live=True, depends_on=ENABLE_GAS_PARAMS),
                         GAS_MAX_V: Param([0.3, 0.2, 0.075], [list, float], live=True, depends_on=ENABLE_GAS_PARAMS),
                         ENABLE_BRAKE_PARAMS: Param(False, bool, live=True, depends_on=ENABLE_LONG_PARAMS),

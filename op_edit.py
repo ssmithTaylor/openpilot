@@ -82,11 +82,12 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
       shown_dots = False
       for idx, param in enumerate(self.params):
         info = self.op_params.param_info(param)
+        indent = self.get_sort_key(param).count(',')
         line = ''
         if not info.depends_on or self.op_params.get(info.depends_on):
           line = '{}. {}: {}  {}'.format(idx + 1, param, values_list[idx], live[idx])
-          line = self.get_sort_key(param).count(',') * '.' + line
-        elif not shown_dots:
+          line = indent * '.' + line
+        elif not shown_dots or info.depends_on and info.depends_on != last_depend:
           line = '...'
           shown_dots = True
         if line:
@@ -96,11 +97,13 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
             _color = blue_gradient[min(round(idx / len(self.params) * len(blue_gradient)), len(blue_gradient) - 1)]
             line = COLORS.BASE(_color) + line
           if last_depend and (not info.depends_on or info.depends_on in last_depend):
-            line = '\n' + line
+            if indent == 0:
+              line = '\n' + line
             shown_dots = False
           to_print.append(line)
 
         last_depend = info.depends_on
+          
 
       extras = {'a': ('Add new parameter', COLORS.OKGREEN),
                 'd': ('Delete parameter', COLORS.FAIL),
