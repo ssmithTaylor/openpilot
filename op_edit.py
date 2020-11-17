@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import time
-from common.op_params import opParams
 import ast
 import difflib
+
+from common.op_params import opParams
 from common.colors import COLORS
+from collections import OrderedDict
 
 
 class opEdit:  # use by running `python /data/openpilot/op_edit.py`
@@ -57,6 +59,8 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
       if self.live_tuning:  # only display live tunable params
         self.params = {k: v for k, v in self.params.items() if self.op_params.param_info(k).live}
 
+      self.params = OrderedDict(sorted(self.params.items(), key=self.sort_params))
+
       values_list = []
       for k, v in self.params.items():
         if len(str(v)) < 20:
@@ -74,14 +78,22 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
 
       to_print = []
       blue_gradient = [33, 39, 45, 51, 87]
+      last_depend = None
       for idx, param in enumerate(self.params):
-        line = '{}. {}: {}  {}'.format(idx + 1, param, values_list[idx], live[idx])
+        info = self.op_params.param_info(param)
+        if not info.depends_on or self.op_params.get(info.depends_on):
+          line = '{}. {}: {}  {}'.format(idx + 1, param, values_list[idx], live[idx])
+        else:
+          line = '.'
         if idx == self.last_choice and self.last_choice is not None:
           line = COLORS.OKGREEN + line
         else:
           _color = blue_gradient[min(round(idx / len(self.params) * len(blue_gradient)), len(blue_gradient) - 1)]
           line = COLORS.BASE(_color) + line
+        if last_depend and info.depends_on != last_depend:
+          line = '\n' + line
         to_print.append(line)
+        last_depend = info.depends_on
 
       extras = {'a': ('Add new parameter', COLORS.OKGREEN),
                 'd': ('Delete parameter', COLORS.FAIL),
@@ -360,5 +372,16 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
         self.info('Not saved!')
       return
 
+  def sort_params(self, kv):
+    k = kv[0]
+    p = self.op_params.param_info(k)
+    order = 1
+
+    for key in self.params.keys():
+      if self.op_params.param_info(key).depends_on == k:
+        order = 0
+        break
+
+    return f'{order}{k}' if not p.depends_on else f'{0}{p.depends_on}{k}'
 
 opEdit()

@@ -19,7 +19,7 @@ class ValueTypes:
   none_or_number = [type(None), float, int]
 
 class Param:
-  def __init__(self, default, allowed_types, description=None, live=False, hidden=False):
+  def __init__(self, default, allowed_types, description=None, live=False, hidden=False, depends_on=None):
     self.default = default
     if not isinstance(allowed_types, list):
       allowed_types = [allowed_types]
@@ -27,6 +27,7 @@ class Param:
     self.description = description
     self.hidden = hidden
     self.live = live
+    self.depends_on = depends_on
     self._create_attrs()
 
   def is_valid(self, value):
@@ -75,14 +76,15 @@ class opParams:
                                                                  'If False, lane change will occur IMMEDIATELY after signaling'),
                         'alca_min_speed': Param(20.0, VT.number, 'The minimum speed allowed for an automatic lane change (in MPH)'),
                         ENABLE_COASTING: Param(False, bool, 'When true the car will try to coast down hills instead of braking.', live=True),
-                        COAST_SPEED: Param(10.0, VT.number, 'The amount of speed to coast by before applying the brakes. Unit: MPH', live=True),
+                        COAST_SPEED: Param(10.0, VT.number, 'The amount of speed to coast by before applying the brakes. Unit: MPH', 
+                                          live=True, depends_on=ENABLE_COASTING),
                         SETPOINT_OFFSET: Param(0, int, 'The difference between the car\'s set cruise speed and OP\'s. Unit: MPH', live=True),
                         DOWNHILL_INCLINE: Param(-1, VT.number, 'If the angle between the current road and the future predicted road is less than this value, '
-                                                              'the car will try to coast downhill. Unit: degrees', live=True),
+                                                              'the car will try to coast downhill. Unit: degrees', live=True, depends_on=ENABLE_COASTING),
                         'corolla_use_indi': Param(False, bool),
                         'accel_hyst_gap': Param(0.02, VT.number, live=True),
-                        ALWAYS_EVAL_COAST: Param(False, bool, live=True),
-                        EVAL_COAST_LONG: Param(False, bool, live=True),
+                        ALWAYS_EVAL_COAST: Param(False, bool, live=True, depends_on=ENABLE_COASTING),
+                        EVAL_COAST_LONG: Param(False, bool, live=True, depends_on=ENABLE_COASTING),
                         'gas_max_bp': Param([0., 20, 33], [list, float, int]),
                         'gas_max_v': Param([0.3, 0.2, 0.075], [list, float]),
                         'indi_use_vego_breakpoints': Param(False, bool, live=True),
