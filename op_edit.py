@@ -246,13 +246,14 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
         choice_idx = choice_idx[1::]
 
       choice_idx = self.str_eval(choice_idx)
+      is_list = isinstance(choice_idx, list)
 
-      if not append_val and (not isinstance(choice_idx, int) or choice_idx not in range(len(old_value))):
+      if not append_val and not (is_list or (isinstance(choice_idx, int) and choice_idx in range(len(old_value)))):
         self.error('Must be an integar within list range!')
         continue
 
       while True:
-        if append_val or remove_idx:
+        if append_val or remove_idx or is_list:
           new_value = choice_idx
         else:
           self.info('Chosen index: {}'.format(choice_idx), sleep_time=0)
@@ -273,6 +274,8 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
           old_value.append(new_value)
         elif remove_idx:
           del old_value[choice_idx]
+        elif is_list:
+          old_value = new_value
         else:
           old_value[choice_idx] = new_value
 
