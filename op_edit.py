@@ -78,16 +78,18 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
 
       to_print = []
       blue_gradient = [33, 39, 45, 51, 87]
-      last_depend = ''
+      last_key = ''
+      last_info = None
       shown_dots = False
       for idx, param in enumerate(self.params):
         info = self.op_params.param_info(param)
         indent = self.get_sort_key(param).count(',')
         line = ''
-        if not info.depends_on or self.op_params.get(info.depends_on):
+        if not info.depends_on or param in last_info.children and \
+          self.op_params.get(last_key) and self.op_params.get(info.depends_on):
           line = '{}. {}: {}  {}'.format(idx + 1, param, values_list[idx], live[idx])
           line = indent * '.' + line
-        elif not shown_dots or info.depends_on and info.depends_on != last_depend:
+        elif not shown_dots and last_info and param in last_info.children:
           line = '...'
           shown_dots = True
         if line:
@@ -96,13 +98,14 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
           else:
             _color = blue_gradient[min(round(idx / len(self.params) * len(blue_gradient)), len(blue_gradient) - 1)]
             line = COLORS.BASE(_color) + line
-          if last_depend and (not info.depends_on or info.depends_on in last_depend):
-            if indent == 0:
-              line = '\n' + line
+          if last_info and len(last_info.children) and indent == 0:
+            line = '\n' + line
             shown_dots = False
           to_print.append(line)
 
-        last_depend = info.depends_on
+        if indent == 0:
+          last_key = param
+          last_info = info
           
 
       extras = {'a': ('Add new parameter', COLORS.OKGREEN),
@@ -389,12 +392,7 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
     p = self.op_params.param_info(k)
 
     if not p.depends_on:
-      order = 1
-      for key in self.params.keys():
-        if self.op_params.param_info(key).depends_on == k:
-          order = 0
-          break
-      return f'{order}{k}'
+      return f'{1 if not len(p.children) else 0}{k}'
     else:
       s = ''
       while p.depends_on:

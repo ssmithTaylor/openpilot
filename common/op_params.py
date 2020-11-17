@@ -28,6 +28,7 @@ class Param:
     self.hidden = hidden
     self.live = live
     self.depends_on = depends_on
+    self.children = []
     self._create_attrs()
 
   def is_valid(self, value):
@@ -126,6 +127,14 @@ class opParams:
     self.fork_params['username'] = Param(None, [type(None), str, bool], 'Your identifier provided with any crash logs sent to Sentry.\nHelps the developer reach out to you if anything goes wrong')
     self.fork_params['op_edit_live_mode'] = Param(False, bool, 'This parameter controls which mode opEdit starts in', hidden=True)
     self.params = self._get_all_params(default=True)  # in case file is corrupted
+
+    for k, p in self.fork_params.items():
+      d = p.depends_on
+      while d:
+        fp = self.fork_params[d]
+        fp.children.append(k)
+        d = fp.depends_on
+
     if travis:
       return
 
