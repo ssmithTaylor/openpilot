@@ -65,7 +65,7 @@ def limit_accel_in_turns(v_ego, angle_steers, a_target, CP):
 
 
 class Planner():
-  def __init__(self, CP):
+  def __init__(self, CP, OP = None):
     self.CP = CP
 
     self.mpc1 = LongitudinalMpc(1)
@@ -89,7 +89,10 @@ class Planner():
     self.params = Params()
     self.first_loop = True
 
-    self.op_params = opParams()
+    if OP is None:
+      OP = opParams()
+      
+    self.op_params = OP
 
     self.avg_height = 0.0 # Average distance from the camera to the ground in meters
     self.height_samples = 0

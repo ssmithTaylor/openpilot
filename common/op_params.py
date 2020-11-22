@@ -34,13 +34,13 @@ class Param:
   def is_valid(self, value):
     if not self.has_allowed_types:
       return True
-    if not self.is_list:
-      return type(value) in self.allowed_types
-    else:
+    if self.is_list and isinstance(value, list):
       for v in value:
         if type(v) not in self.allowed_types:
           return False
       return True
+    else:
+      return type(value) in self.allowed_types
 
   def _create_attrs(self):  # Create attributes and check Param is valid
     self.has_allowed_types = isinstance(self.allowed_types, list) and len(self.allowed_types) > 0
