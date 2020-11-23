@@ -11,7 +11,7 @@ from selfdrive.controls.lib.drive_helpers import get_steer_max
 
 
 class LatControlINDI():
-  def __init__(self, CP):
+  def __init__(self, CP, OP=None):
     self.angle_steers_des = 0.
 
     A = np.matrix([[1.0, DT_CTRL, 0.0],
@@ -35,7 +35,9 @@ class LatControlINDI():
 
     self.enforce_rate_limit = CP.carName == "toyota"
 
-    self.op_params = opParams()
+    if OP is None:
+      OP = opParams()
+    self.op_params = OP
 
     self.sat_count_rate = 1.0 * DT_CTRL
     self.sat_limit = CP.steerLimitTimer

@@ -40,14 +40,14 @@ class Param:
           return False
       return True
     else:
-      return type(value) in self.allowed_types
+      return type(value) in self.allowed_types or value in self.allowed_types
 
   def _create_attrs(self):  # Create attributes and check Param is valid
     self.has_allowed_types = isinstance(self.allowed_types, list) and len(self.allowed_types) > 0
     self.has_description = self.description is not None
     self.is_list = list in self.allowed_types
     if self.has_allowed_types:
-      assert type(self.default) in self.allowed_types, 'Default value type must be in specified allowed_types!'
+      assert type(self.default) in self.allowed_types or self.default in self.allowed_types, 'Default value type must be in specified allowed_types!'
 
       if self.is_list:
         for v in self.default:

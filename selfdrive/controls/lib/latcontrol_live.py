@@ -13,7 +13,7 @@ class LatControlLive():
         self.op_params = OP
 
         self.pid = LatControlPID(CP)
-        self.indi = LatControlINDI(CP)
+        self.indi = LatControlINDI(CP, OP=self.op_params)
         self.lqr = LatControlLQR(CP)
 
         self.ctrl_type = ''
