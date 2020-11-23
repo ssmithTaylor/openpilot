@@ -116,7 +116,10 @@ class opParams:
                         'a_cruise_max_bp': Param([0., 5., 10., 20., 55.], [list, float], live=True, depends_on=SHOW_A_CRUISE),
                         'a_cruise_max_v': Param([0.8, 0.9, 1.0, 0.4, 0.2], [list, float], live=True, depends_on=SHOW_A_CRUISE),
                         'a_cruise_max_v_following': Param([1.6, 1.4, 1.4, .7, .3], [list, float], live=True, depends_on=SHOW_A_CRUISE),
-                        ENABLE_UNSAFE_STEERING_RATE: Param(False, bool)}
+                        ENABLE_UNSAFE_STEERING_RATE: Param(False, bool),
+                        ENABLE_LAT_PARAMS: Param(False, bool, live=True, description="When true, the lat params set in op_edit."),
+                        WHICH_LAT_CTRL: Param('indi', ['pid', 'indi', 'lqr'], live=True, depends_on= ENABLE_LAT_PARAMS, description='Which lat controller to use, '
+                                              'options are pid, indi, or lqr.')}
 
     self._params_file = '/data/op_params.json'
     self._backup_file = '/data/op_params_corrupt.json'
@@ -275,3 +278,6 @@ GAS_MAX_V = 'gas_max_v'
 ENABLE_BRAKE_PARAMS = 'enable_brake_params'
 BRAKE_MAX_BP = 'brake_max_bp'
 BRAKE_MAX_V = 'brake_max_v'
+
+ENABLE_LAT_PARAMS = 'enable_lat_params'
+WHICH_LAT_CTRL = 'which_lat_controller'
