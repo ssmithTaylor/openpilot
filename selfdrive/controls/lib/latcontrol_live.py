@@ -36,6 +36,10 @@ class LatControlLive():
             self._select_ctrl(self.op_params.get(WHICH_LAT_CTRL))
         else:
             self._select_ctrl(self.CP.lateralTuning.which())
+    
+    @property
+    def angle_steers_des(self):
+        return self.ctrl.angle_steers_des
 
     def reset(self):
         self.pid.reset()

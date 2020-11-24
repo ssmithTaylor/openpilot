@@ -511,7 +511,7 @@ class Controls:
       controlsState.lateralControlState.pidState = lac_log
     elif self.LaC.ctrl_type == 'lqr':
       controlsState.lateralControlState.lqrState = lac_log
-    elif self.Lac.ctrl_type == 'indi':
+    elif self.LaC.ctrl_type == 'indi':
       controlsState.lateralControlState.indiState = lac_log
     self.pm.send('controlsState', dat)
 
