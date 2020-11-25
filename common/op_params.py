@@ -98,6 +98,11 @@ class opParams:
                         ENABLE_BRAKE_PARAMS: Param(False, bool, live=True, depends_on=ENABLE_LONG_PARAMS),
                         BRAKE_MAX_BP: Param([0., 20, 33], [list, float, int], live=True, depends_on=ENABLE_BRAKE_PARAMS),
                         BRAKE_MAX_V: Param([0.5, 0.5, 0.5], [list, float], live=True, depends_on=ENABLE_BRAKE_PARAMS),
+                        ENABLE_LONG_PID_PARAMS: Param(False, bool, live=True, depends_on=ENABLE_LONG_PARAMS),
+                        LONG_PID_KP_BP: Param([0., 5., 35.], [list, float, int], live=True, depends_on=ENABLE_LONG_PID_PARAMS),
+                        LONG_PID_KP_V: Param([3.6, 2.4, 1.5], [list, float, int], live=True, depends_on=ENABLE_LONG_PID_PARAMS),
+                        LONG_PID_KI_BP: Param([0., 35.], [list, float, int], live=True, depends_on=ENABLE_LONG_PID_PARAMS),
+                        LONG_PID_KI_V: Param([0.54, 0.36], [list, float, int], live=True, depends_on=ENABLE_LONG_PID_PARAMS),
                         INDI_SHOW_BREAKPOINTS: Param(False, bool, live=True),
                         'indi_use_vego_breakpoints': Param(False, bool, live=True, depends_on=INDI_SHOW_BREAKPOINTS),
                         'indi_use_steer_angle_breakpoints': Param(False, bool, live=True, depends_on=INDI_SHOW_BREAKPOINTS),
@@ -287,6 +292,11 @@ GAS_MAX_V = 'gas_max_v'
 ENABLE_BRAKE_PARAMS = 'enable_brake_params'
 BRAKE_MAX_BP = 'brake_max_bp'
 BRAKE_MAX_V = 'brake_max_v'
+ENABLE_LONG_PID_PARAMS = 'enable_long_pid_params'
+LONG_PID_KP_BP = 'long_pid_kp_bp'
+LONG_PID_KP_V = 'long_pid_kp_v'
+LONG_PID_KI_BP = 'long_pid_ki_bp'
+LONG_PID_KI_V = 'long_pid_ki_v'
 
 ENABLE_LAT_PARAMS = 'enable_lat_params'
 WHICH_LAT_CTRL = 'which_lat_controller'

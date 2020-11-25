@@ -12,7 +12,7 @@ def apply_deadzone(error, deadzone):
   return error
 
 class PIController():
-  def __init__(self, k_p, k_i, k_f=1., pos_limit=None, neg_limit=None, rate=100, sat_limit=0.8, convert=None, p_bp_key=None, p_v_key=None, i_bp_key=None, i_v_key=None, enabled_key=None, OP=None):
+  def __init__(self, k_p, k_i, k_f=1., pos_limit=None, neg_limit=None, rate=100, sat_limit=0.8, convert=None, p_bp_key=None, p_v_key=None, i_bp_key=None, i_v_key=None, OP=None, use_ops=False):
     self._k_p = k_p  # proportional gain
     self._k_i = k_i  # integral gain
     self.k_f = k_f  # feedforward gain
@@ -34,21 +34,21 @@ class PIController():
     self.p_v_key = p_v_key
     self.i_bp_key = i_bp_key
     self.i_v_key = i_v_key
-    self.enabled_key = enabled_key
-    self.has_all_keys = p_bp_key and p_v_key and i_bp_key and i_v_key and enabled_key
+    self.use_ops = use_ops
+    self.has_all_keys = p_bp_key and p_v_key and i_bp_key and i_v_key
 
     self.reset()
 
   @property
   def k_p(self):
-    if self.has_all_keys and self.op_params.get(self.enabled_key):
+    if self.has_all_keys and ((callable(self.use_ops) and self.use_ops(self.op_params)) or self.op_params.get(self.use_ops)):
       return interp(self.speed, self.op_params.get(self.p_bp_key), self.op_params.get(self.p_v_key))
     else:
       return interp(self.speed, self._k_p[0], self._k_p[1])
 
   @property
   def k_i(self):
-    if self.has_all_keys and self.op_params.get(self.enabled_key):
+    if self.has_all_keys and ((callable(self.use_ops) and self.use_ops(self.op_params)) or self.op_params.get(self.use_ops)):
       return interp(self.speed, self.op_params.get(self.i_bp_key), self.op_params.get(self.i_v_key))
     else:
       return interp(self.speed, self._k_i[0], self._k_i[1])
