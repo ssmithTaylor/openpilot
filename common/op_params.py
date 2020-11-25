@@ -119,7 +119,16 @@ class opParams:
                         ENABLE_UNSAFE_STEERING_RATE: Param(False, bool),
                         ENABLE_LAT_PARAMS: Param(False, bool, live=True, description="When true, the lat params set in op_edit."),
                         WHICH_LAT_CTRL: Param('indi', ['pid', 'indi', 'lqr'], live=True, depends_on= ENABLE_LAT_PARAMS, description='Which lat controller to use, '
-                                              'options are pid, indi, or lqr.')}
+                                              'options are pid, indi, or lqr.'),
+                        LQR_SCALE: Param(0, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS),
+                        LQR_KI: Param(0, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS),
+                        LQR_A: Param(0, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS),
+                        LQR_B: Param(0, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS),
+                        LQR_C: Param(0, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS),
+                        LQR_K: Param(0, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS),
+                        LQR_L: Param(0, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS),
+                        LQR_DC_GAIN: Param(0, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS),
+                        STEER_LIMIT_TIMER: Param(0, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS)}
 
     self._params_file = '/data/op_params.json'
     self._backup_file = '/data/op_params_corrupt.json'
@@ -281,3 +290,14 @@ BRAKE_MAX_V = 'brake_max_v'
 
 ENABLE_LAT_PARAMS = 'enable_lat_params'
 WHICH_LAT_CTRL = 'which_lat_controller'
+
+LQR_SCALE = 'lqr_scale'
+LQR_KI = 'lqr_ki'
+LQR_A = 'lqr_a'
+LQR_B = 'lqr_b'
+LQR_C = 'lqr_c'
+LQR_K = 'lqr_k'
+LQR_L = 'lqr_l'
+LQR_DC_GAIN = 'lqr_dc_gain'
+
+STEER_LIMIT_TIMER = 'steer_limit_timer'

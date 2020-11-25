@@ -14,7 +14,7 @@ class LatControlLive():
 
         self.pid = LatControlPID(CP)
         self.indi = LatControlINDI(CP, OP=self.op_params)
-        self.lqr = LatControlLQR(CP)
+        self.lqr = LatControlLQR(CP, OP=self.op_params)
 
         self.ctrl_type = ''
         self.ctrl = None
