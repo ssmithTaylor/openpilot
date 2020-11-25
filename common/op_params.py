@@ -103,6 +103,9 @@ class opParams:
                         LONG_PID_KP_V: Param([3.6, 2.4, 1.5], [list, float, int], live=True, depends_on=ENABLE_LONG_PID_PARAMS),
                         LONG_PID_KI_BP: Param([0., 35.], [list, float, int], live=True, depends_on=ENABLE_LONG_PID_PARAMS),
                         LONG_PID_KI_V: Param([0.54, 0.36], [list, float, int], live=True, depends_on=ENABLE_LONG_PID_PARAMS),
+                        ENABLE_LONG_DEADZONE_PARAMS: Param(False, bool, live=True, depends_on=ENABLE_LONG_PARAMS),
+                        LONG_DEADZONE_BP: Param([0., 9.], [list, float, int], live=True, depends_on=ENABLE_LONG_DEADZONE_PARAMS),
+                        LONG_DEADZONE_V: Param([0., .15], [list, float, int], live=True, depends_on=ENABLE_LONG_DEADZONE_PARAMS),
                         INDI_SHOW_BREAKPOINTS: Param(False, bool, live=True),
                         'indi_use_vego_breakpoints': Param(False, bool, live=True, depends_on=INDI_SHOW_BREAKPOINTS),
                         'indi_use_steer_angle_breakpoints': Param(False, bool, live=True, depends_on=INDI_SHOW_BREAKPOINTS),
@@ -297,6 +300,9 @@ LONG_PID_KP_BP = 'long_pid_kp_bp'
 LONG_PID_KP_V = 'long_pid_kp_v'
 LONG_PID_KI_BP = 'long_pid_ki_bp'
 LONG_PID_KI_V = 'long_pid_ki_v'
+ENABLE_LONG_DEADZONE_PARAMS = 'enable_long_deadzone_params'
+LONG_DEADZONE_BP = 'long_deadzone_bp'
+LONG_DEADZONE_V = 'long_deadzone_v'
 
 ENABLE_LAT_PARAMS = 'enable_lat_params'
 WHICH_LAT_CTRL = 'which_lat_controller'
