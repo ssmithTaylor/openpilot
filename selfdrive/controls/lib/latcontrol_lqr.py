@@ -8,7 +8,7 @@ from cereal import log
 
 class LatControlLQR():
   def __init__(self, CP, OP=None):
-    if CP.lateralTuning.lqr:
+    if CP.lateralTuning.which() == 'lqr':
       self.scale = CP.lateralTuning.lqr.scale
       self.ki = CP.lateralTuning.lqr.ki
       self.A = np.array(CP.lateralTuning.lqr.a).reshape((2, 2))
