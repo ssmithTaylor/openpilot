@@ -2,14 +2,20 @@ from selfdrive.controls.lib.pid import PIController
 from selfdrive.controls.lib.drive_helpers import get_steer_max
 from cereal import car
 from cereal import log
-
+from common.op_params import opParams, ENABLE_LAT_PARAMS, LAT_PID_KP_BP, LAT_PID_KP_V, LAT_PID_KI_BP, LAT_PID_KI_V
 
 class LatControlPID():
-  def __init__(self, CP):
+  def __init__(self, CP, OP=None):
+    if OP is None:
+      OP = opParams()
+    self.op_params = OP
     self.pid = PIController((CP.lateralTuning.pid.kpBP, CP.lateralTuning.pid.kpV),
                             (CP.lateralTuning.pid.kiBP, CP.lateralTuning.pid.kiV),
                             k_f=CP.lateralTuning.pid.kf, pos_limit=1.0, neg_limit=-1.0,
-                            sat_limit=CP.steerLimitTimer)
+                            sat_limit=CP.steerLimitTimer,
+                            p_bp_key=LAT_PID_KP_BP, p_v_key=LAT_PID_KP_V,
+                            i_bp_key=LAT_PID_KI_BP, i_v_key=LAT_PID_KI_V, 
+                            OP=self.op_params, use_ops=ENABLE_LAT_PARAMS)
     self.angle_steers_des = 0.
 
   def reset(self):

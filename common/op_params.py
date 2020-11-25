@@ -136,7 +136,11 @@ class opParams:
                         LQR_K: Param(0, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS),
                         LQR_L: Param(0, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS),
                         LQR_DC_GAIN: Param(0, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS),
-                        STEER_LIMIT_TIMER: Param(0, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS)}
+                        STEER_LIMIT_TIMER: Param(0, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS),
+                        LAT_PID_KP_BP: Param([0., 5., 35.], [list, float, int], live=True, depends_on=ENABLE_LAT_PARAMS),
+                        LAT_PID_KP_V: Param([3.6, 2.4, 1.5], [list, float, int], live=True, depends_on=ENABLE_LAT_PARAMS),
+                        LAT_PID_KI_BP: Param([0., 35.], [list, float, int], live=True, depends_on=ENABLE_LAT_PARAMS),
+                        LAT_PID_KI_V: Param([0.54, 0.36], [list, float, int], live=True, depends_on=ENABLE_LAT_PARAMS)}
 
     self._params_file = '/data/op_params.json'
     self._backup_file = '/data/op_params_corrupt.json'
@@ -317,3 +321,8 @@ LQR_L = 'lqr_l'
 LQR_DC_GAIN = 'lqr_dc_gain'
 
 STEER_LIMIT_TIMER = 'steer_limit_timer'
+
+LAT_PID_KP_BP = 'lat_pid_kp_bp'
+LAT_PID_KP_V = 'lat_pid_kp_v'
+LAT_PID_KI_BP = 'lat_pid_ki_bp'
+LAT_PID_KI_V = 'lat_pid_ki_v'
