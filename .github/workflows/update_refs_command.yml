@@ -16,6 +16,9 @@ jobs:
           lfs: true
           ref: ${{ env.BRANCH }}
           token: ${{ secrets.REPO_PAT }}
+      - name: Remove old refs
+        run: |
+          rm selfdrive/test/process_replay/*.bz2
       - name: Build Docker Image
         run: |
           docker build -t commaai/openpilot-base:latest -f Dockerfile.openpilot_base .
