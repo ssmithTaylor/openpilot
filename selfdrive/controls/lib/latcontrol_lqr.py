@@ -2,7 +2,7 @@ import numpy as np
 from selfdrive.controls.lib.drive_helpers import get_steer_max
 from common.numpy_fast import clip
 from common.realtime import DT_CTRL
-from common.op_params import opParams, ENABLE_LAT_PARAMS, LQR_SCALE, LQR_KI, LQR_A, LQR_B, LQR_C, LQR_K, LQR_L, LQR_DC_GAIN, STEER_LIMIT_TIMER
+from common.op_params import opParams, ENABLE_LAT_PARAMS, LQR_SCALE, LQR_KI, LQR_A, LQR_B, LQR_C, LQR_K, LQR_L, LQR_DC_GAIN, STEER_LIMIT_TIMER, WHICH_LAT_CTRL
 from cereal import log
 
 
@@ -51,7 +51,7 @@ class LatControlLQR():
     return self.sat_count > self.sat_limit
 
   def _update_params(self):
-    if self.op_params.get(ENABLE_LAT_PARAMS):
+    if self.op_params.get(ENABLE_LAT_PARAMS) and self.op_params.get(WHICH_LAT_CTRL) == 'lqr':
       self.scale = self.op_params.get(LQR_SCALE)
       self.ki = self.op_params.get(LQR_KI)
       self.A = np.array(self.op_params.get(LQR_A)).reshape((2, 2))
