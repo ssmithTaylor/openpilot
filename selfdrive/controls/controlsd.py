@@ -102,7 +102,7 @@ class Controls:
     self.AM = AlertManager()
     self.events = Events()
 
-    self.LoC = LongControl(self.CP, self.CI.compute_gb)
+    self.LoC = LongControl(self.CP, self.CI.compute_gb, OP=self.opParams)
     self.VM = VehicleModel(self.CP)
 
     self.LaC = LatControlLive(self.CP, OP=self.opParams)
