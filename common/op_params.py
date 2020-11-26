@@ -126,7 +126,7 @@ class opParams:
                         'a_cruise_max_v_following': Param([1.6, 1.4, 1.4, .7, .3], [list, float], live=True, depends_on=SHOW_A_CRUISE),
                         ENABLE_UNSAFE_STEERING_RATE: Param(False, bool),
                         ENABLE_LAT_PARAMS: Param(True, bool, live=True, description="When true, the lat params set in op_edit."),
-                        WHICH_LAT_CTRL: Param('pid', ['pid', 'indi', 'lqr'], live=True, depends_on= ENABLE_LAT_PARAMS, description='Which lat controller to use, '
+                        WHICH_LAT_CTRL: Param('lqr', ['pid', 'indi', 'lqr'], live=True, depends_on= ENABLE_LAT_PARAMS, description='Which lat controller to use, '
                                               'options are pid, indi, or lqr.'),
                         SHOW_LQR_PARAMS: Param(False, [bool], live=True, depends_on=ENABLE_LAT_PARAMS),
                         LQR_SCALE: Param(1500.0, VT.number, live=True, depends_on=SHOW_LQR_PARAMS),
