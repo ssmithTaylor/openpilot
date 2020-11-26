@@ -1,4 +1,5 @@
 import numpy as np
+import types
 from common.numpy_fast import clip, interp
 from common.op_params import opParams
 
@@ -35,20 +36,20 @@ class PIController():
     self.i_bp_key = i_bp_key
     self.i_v_key = i_v_key
     self.use_ops = use_ops
-    self.has_all_keys = p_bp_key and p_v_key and i_bp_key and i_v_key
+    self.has_all_keys = p_bp_key and p_v_key and i_bp_key and i_v_key and use_ops
 
     self.reset()
 
   @property
   def k_p(self):
-    if self.has_all_keys and ((callable(self.use_ops) and self.use_ops(self.op_params)) or self.op_params.get(self.use_ops)):
+    if self.has_all_keys and ((isinstance(self.use_ops, types.LambdaType) and self.use_ops(self.op_params)) or self.op_params.get(self.use_ops)):
       return interp(self.speed, self.op_params.get(self.p_bp_key), self.op_params.get(self.p_v_key))
     else:
       return interp(self.speed, self._k_p[0], self._k_p[1])
 
   @property
   def k_i(self):
-    if self.has_all_keys and ((callable(self.use_ops) and self.use_ops(self.op_params)) or self.op_params.get(self.use_ops)):
+    if self.has_all_keys and ((isinstance(self.use_ops, types.LambdaType) and self.use_ops(self.op_params)) or self.op_params.get(self.use_ops)):
       return interp(self.speed, self.op_params.get(self.i_bp_key), self.op_params.get(self.i_v_key))
     else:
       return interp(self.speed, self._k_i[0], self._k_i[1])
