@@ -3,13 +3,17 @@
 import os
 import time
 
+from common.op_params import opParams, ENABLE_UNSAFE_STEERING_RATE
 from common.hardware import TICI
 from common.gpio import GPIO_HUB_RST_N, GPIO_STM_BOOT0, GPIO_STM_RST_N, gpio_init, gpio_set
 from panda import BASEDIR, Panda, PandaDFU, build_st
 from selfdrive.swaglog import cloudlog
 
+OP_PARAMS = opParams()
+
 def is_legacy_panda_reset():
   return os.path.isfile("/persist/LEGACY_PANDA_RESET")
+
 
 def set_panda_power(power=True):
   if not TICI:
@@ -34,7 +38,12 @@ def get_firmware_fn():
   else:
     cloudlog.info("Building panda firmware")
     fn = "obj/panda.bin"
-    build_st(fn, clean=False)
+    mk = "Makefile"
+
+    if OP_PARAMS.get(ENABLE_UNSAFE_STEERING_RATE):
+      mk += " UNSAFE_TORQUE_RATE=1"
+
+    build_st(fn, mk, clean=False)
     return os.path.join(BASEDIR, "board", fn)
 
 

@@ -234,7 +234,6 @@ static void ui_draw_vision_lane_lines(UIState *s) {
     NVGcolor color = nvgRGBAf(1.0, 1.0, 1.0, scene->lane_line_probs[ll_idx]);
     ui_draw_line(s, (pvd_ll + ll_idx)->v, (pvd_ll + ll_idx)->cnt, &color, nullptr);
   }
-
   // paint road edges
   line_vertices_data *pvd_re = &s->road_edge_vertices[0];
   for (int re_idx = 0; re_idx < 2; re_idx++) {

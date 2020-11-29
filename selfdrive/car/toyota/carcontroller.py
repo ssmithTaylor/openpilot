@@ -6,6 +6,7 @@ from selfdrive.car.toyota.toyotacan import create_steer_command, create_ui_comma
                                            create_fcw_command
 from selfdrive.car.toyota.values import Ecu, CAR, STATIC_MSGS, SteerLimitParams
 from opendbc.can.packer import CANPacker
+from common.op_params import opParams
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
@@ -15,16 +16,16 @@ ACCEL_MAX = 1.5  # 1.5 m/s2
 ACCEL_MIN = -3.0  # 3   m/s2
 ACCEL_SCALE = max(ACCEL_MAX, -ACCEL_MIN)
 
-def accel_hysteresis(accel, accel_steady, enabled):
+def accel_hysteresis(accel, accel_steady, enabled, accel_gap):
 
   # for small accel oscillations within ACCEL_HYST_GAP, don't change the accel command
   if not enabled:
     # send 0 when disabled, otherwise acc faults
     accel_steady = 0.
-  elif accel > accel_steady + ACCEL_HYST_GAP:
-    accel_steady = accel - ACCEL_HYST_GAP
-  elif accel < accel_steady - ACCEL_HYST_GAP:
-    accel_steady = accel + ACCEL_HYST_GAP
+  elif accel > accel_steady + accel_gap:
+    accel_steady = accel - accel_gap
+  elif accel < accel_steady - accel_gap:
+    accel_steady = accel + accel_gap
   accel = accel_steady
 
   return accel, accel_steady
@@ -48,6 +49,7 @@ class CarController():
       self.fake_ecus.add(Ecu.dsu)
 
     self.packer = CANPacker(dbc_name)
+    self.opParams = opParams()
 
   def update(self, enabled, CS, frame, actuators, pcm_cancel_cmd, hud_alert,
              left_line, right_line, lead, left_lane_depart, right_lane_depart):
@@ -55,7 +57,6 @@ class CarController():
     # *** compute control surfaces ***
 
     # gas and brake
-
     apply_gas = clip(actuators.gas, 0., 1.)
 
     if CS.CP.enableGasInterceptor:
@@ -65,7 +66,7 @@ class CarController():
     else:
       apply_accel = actuators.gas - actuators.brake
 
-    apply_accel, self.accel_steady = accel_hysteresis(apply_accel, self.accel_steady, enabled)
+    apply_accel, self.accel_steady = accel_hysteresis(apply_accel, self.accel_steady, enabled, self.opParams.get('accel_hyst_gap'))
     apply_accel = clip(apply_accel * ACCEL_SCALE, ACCEL_MIN, ACCEL_MAX)
 
     # steer torque

@@ -429,7 +429,6 @@ void model_publish(PubMaster &pm, uint32_t vipc_frame_id, uint32_t frame_id,
 
   auto lpath = framed.initPath();
   fill_path(lpath, &net_outputs.plan[plan_mhp_max_idx*(PLAN_MHP_GROUP_SIZE)], valid_len, valid_len_idx);
-
   auto left_lane = framed.initLeftLane();
   int ll_idx = 1;
   fill_lane_line(left_lane, net_outputs.lane_lines, ll_idx, valid_len, valid_len_idx,
