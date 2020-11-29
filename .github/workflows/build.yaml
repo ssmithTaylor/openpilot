@@ -26,7 +26,7 @@ env:
 jobs:
   build_release:
     name: build release
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-20.04
     timeout-minutes: 50
     env:
       TEST_DIR: tmppilot
@@ -58,7 +58,7 @@ jobs:
 
   github_push_prebuilt:
     name: github push prebuilt
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-20.04
     timeout-minutes: 50
     if: github.ref == 'refs/heads/src' && github.event_name == 'push' && github.repository == 'jamcar23/openpilot'
     needs: [build_release, static_analysis, unit_tests]
@@ -85,7 +85,7 @@ jobs:
 
   static_analysis:
     name: static analysis
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-20.04
     timeout-minutes: 50
     steps:
       - uses: actions/checkout@v2
@@ -98,7 +98,7 @@ jobs:
 
   unit_tests:
     name: unit tests
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-20.04
     timeout-minutes: 50
     steps:
       - uses: actions/checkout@v2
