@@ -1,6 +1,7 @@
 op_edit.py
 common/colors.py
 common/op_params.py
+selfdrive/controls/lib/latcontrol_live.py
 
 .gitignore
 LICENSE
@@ -241,7 +242,6 @@ selfdrive/controls/lib/drive_helpers.py
 selfdrive/controls/lib/latcontrol_pid.py
 selfdrive/controls/lib/latcontrol_indi.py
 selfdrive/controls/lib/latcontrol_lqr.py
-selfdrive/controls/lib/latcontrol_live.py
 selfdrive/controls/lib/longcontrol.py
 selfdrive/controls/lib/pathplanner.py
 selfdrive/controls/lib/lane_planner.py
