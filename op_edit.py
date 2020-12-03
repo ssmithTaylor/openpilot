@@ -205,6 +205,10 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
           return
 
         new_value = self.str_eval(new_value)
+
+        if param_info.is_bool and type(new_value) is int:
+          new_value = bool(new_value)
+
         if not param_info.is_valid(new_value):
           self.error('The type of data you entered ({}) is not allowed with this parameter!'.format(type(new_value).__name__))
           continue
