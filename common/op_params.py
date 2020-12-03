@@ -76,7 +76,11 @@ class opParams:
                         'indi_outer_gain': Param(8.9, VT.number, live=True, depends_on=SHOW_INDI_PARAMS),
                         'indi_time_constant': Param(5.5, VT.number, live=True, depends_on=SHOW_INDI_PARAMS),
                         'indi_actuator_effectiveness': Param(9.0, VT.number, live=True, depends_on=SHOW_INDI_PARAMS),
-                        STEER_ACTUATOR_DELAY: Param(0.60, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS),
+                        SHOW_ACTUATOR_DELAY_PARAMS: Param(False, bool, live=True, depends_on=ENABLE_LAT_PARAMS),
+                        STEER_ACTUATOR_DELAY: Param(0.60, VT.number, live=True, depends_on=SHOW_ACTUATOR_DELAY_PARAMS),
+                        ENABLE_ACTUATOR_DELAY_BPS: Param(False, bool, live=True, depends_on=SHOW_ACTUATOR_DELAY_PARAMS),
+                        STEER_ACTUATOR_DELAY_BP: Param([0.], [list, float, int], live=True, depends_on=ENABLE_ACTUATOR_DELAY_BPS),
+                        STEER_ACTUATOR_DELAY_V: Param([0.6], [list, float, int], live=True, depends_on=ENABLE_ACTUATOR_DELAY_BPS),
                         'alca_nudge_required': Param(False, bool, 'Whether to wait for applied torque to the wheel (nudge) before making lane changes. '
                                                                  'If False, lane change will occur IMMEDIATELY after signaling'),
                         'alca_min_speed': Param(20.0, VT.number, 'The minimum speed allowed for an automatic lane change (in MPH)'),
@@ -329,9 +333,13 @@ LQR_C = 'lqr_c'
 LQR_K = 'lqr_k'
 LQR_L = 'lqr_l'
 LQR_DC_GAIN = 'lqr_dc_gain'
-
 STEER_LIMIT_TIMER = 'steer_limit_timer'
+
+SHOW_ACTUATOR_DELAY_PARAMS = "show_actuator_delay_params"
 STEER_ACTUATOR_DELAY = 'steer_actuator_delay'
+ENABLE_ACTUATOR_DELAY_BPS = 'enable_actuator_delay_breakpoints'
+STEER_ACTUATOR_DELAY_BP = 'steer_actuator_delay_bp'
+STEER_ACTUATOR_DELAY_V = 'steer_actuator_delay_v'
 
 SHOW_LAT_PID_PARAMS = 'show_lat_pid_params'
 LAT_PID_KP_BP = 'lat_pid_kp_bp'
