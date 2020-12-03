@@ -30,7 +30,7 @@ class LatControlLQR():
 
     self.op_params = OP
 
-    self._update_params()
+    self._update_params(CP)
     self.reset()
 
   def reset(self):
@@ -50,7 +50,7 @@ class LatControlLQR():
 
     return self.sat_count > self.sat_limit
 
-  def _update_params(self):
+  def _update_params(self, CP):
     if self.op_params.get(ENABLE_LAT_PARAMS) and self.op_params.get(WHICH_LAT_CTRL) == 'lqr':
       self.scale = self.op_params.get(LQR_SCALE)
       self.ki = self.op_params.get(LQR_KI)
@@ -61,9 +61,19 @@ class LatControlLQR():
       self.L = np.array(self.op_params.get(LQR_L)).reshape((2, 1)) 
       self.dc_gain = self.op_params.get(LQR_DC_GAIN)
       self.sat_limit = self.op_params.get(STEER_LIMIT_TIMER)
+    elif CP.lateralTuning.which() == 'lqr':
+      self.scale = CP.lateralTuning.lqr.scale
+      self.ki = CP.lateralTuning.lqr.ki
+      self.A = np.array(CP.lateralTuning.lqr.a).reshape((2, 2))
+      self.B = np.array(CP.lateralTuning.lqr.b).reshape((2, 1))
+      self.C = np.array(CP.lateralTuning.lqr.c).reshape((1, 2))
+      self.K = np.array(CP.lateralTuning.lqr.k).reshape((1, 2))
+      self.L = np.array(CP.lateralTuning.lqr.l).reshape((2, 1))
+      self.dc_gain = CP.lateralTuning.lqr.dcGain
+      self.sat_limit = CP.steerLimitTimer
 
   def update(self, active, CS, CP, path_plan):
-    self._update_params()
+    self._update_params(CP)
 
     lqr_log = log.ControlsState.LateralLQRState.new_message()
 
