@@ -108,6 +108,8 @@ class opParams:
                         LONG_PID_KP_V: Param([3.6, 2.4, 1.5], [list, float, int], live=True, depends_on=ENABLE_LONG_PID_PARAMS),
                         LONG_PID_KI_BP: Param([0., 35.], [list, float, int], live=True, depends_on=ENABLE_LONG_PID_PARAMS),
                         LONG_PID_KI_V: Param([0.54, 0.36], [list, float, int], live=True, depends_on=ENABLE_LONG_PID_PARAMS),
+                        LONG_PID_KF: Param(1., VT.number, live=True, depends_on=ENABLE_LONG_PID_PARAMS),
+                        LONG_PID_SAT_LIMIT: Param(0.8, VT.number, live=True, depends_on=ENABLE_LONG_PID_PARAMS),
                         ENABLE_LONG_DEADZONE_PARAMS: Param(False, bool, live=True, depends_on=ENABLE_LONG_PARAMS),
                         LONG_DEADZONE_BP: Param([0., 9.], [list, float, int], live=True, depends_on=ENABLE_LONG_DEADZONE_PARAMS),
                         LONG_DEADZONE_V: Param([0., .15], [list, float, int], live=True, depends_on=ENABLE_LONG_DEADZONE_PARAMS),
@@ -149,6 +151,7 @@ class opParams:
                         LAT_PID_KP_V: Param([3.6, 2.4, 1.5], [list, float, int], live=True, depends_on=SHOW_LAT_PID_PARAMS),
                         LAT_PID_KI_BP: Param([0., 35.], [list, float, int], live=True, depends_on=SHOW_LAT_PID_PARAMS),
                         LAT_PID_KI_V: Param([0.54, 0.36], [list, float, int], live=True, depends_on=SHOW_LAT_PID_PARAMS),
+                        LAT_PID_KF: Param(1., VT.number, live=True, depends_on=SHOW_LAT_PID_PARAMS),
                         SHOW_INDI_PARAMS: Param(False, [bool], live=True, depends_on=ENABLE_LAT_PARAMS),
                         SHOW_UNSAFE_OPTS: Param(False, [bool], live=True, description='Shows options for unsafe / dangerous features. '
                                                 'If any of these are enabled, prepare for the worst: no steering, no gas / brake, etc.'),
@@ -318,6 +321,8 @@ LONG_PID_KP_BP = 'long_pid_kp_bp'
 LONG_PID_KP_V = 'long_pid_kp_v'
 LONG_PID_KI_BP = 'long_pid_ki_bp'
 LONG_PID_KI_V = 'long_pid_ki_v'
+LONG_PID_KF = 'long_pid_kf'
+LONG_PID_SAT_LIMIT = 'long_pid_sat_limit'
 ENABLE_LONG_DEADZONE_PARAMS = 'enable_long_deadzone_params'
 LONG_DEADZONE_BP = 'long_deadzone_bp'
 LONG_DEADZONE_V = 'long_deadzone_v'
@@ -347,6 +352,7 @@ LAT_PID_KP_BP = 'lat_pid_kp_bp'
 LAT_PID_KP_V = 'lat_pid_kp_v'
 LAT_PID_KI_BP = 'lat_pid_ki_bp'
 LAT_PID_KI_V = 'lat_pid_ki_v'
+LAT_PID_KF = 'lat_pid_kf'
 
 SHOW_UNSAFE_OPTS = 'show_unsafe_options'
 SHOW_EXPERIMENTAL_OPTS = 'show_experimental_options'
