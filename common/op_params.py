@@ -72,7 +72,7 @@ class opParams:
     """
 
     VT = ValueTypes()
-    self.fork_params = {'camera_offset': Param(0.06, VT.number, 'Your camera offset to use in lane_planner.py', live=True),
+    self.fork_params = {CAM_OFFSET: Param(0.06, VT.number, 'Your camera offset to use in lane_planner.py', live=True),
                         'indi_inner_gain': Param(9.0, VT.number, live=True, depends_on=SHOW_INDI_PARAMS),
                         'indi_outer_gain': Param(8.9, VT.number, live=True, depends_on=SHOW_INDI_PARAMS),
                         'indi_time_constant': Param(5.5, VT.number, live=True, depends_on=SHOW_INDI_PARAMS),
@@ -294,6 +294,7 @@ class opParams:
         print("Unable to write file: " + str(e))
         return False
 
+CAM_OFFSET = 'camera_offset'
 
 ENABLE_UNSAFE_STEERING_RATE = "enable_unsafe_steering_rate"
 
