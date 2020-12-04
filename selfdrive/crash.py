@@ -2,7 +2,6 @@
 import os
 import sys
 import threading
-import capnp
 import traceback
 
 from selfdrive.version import version, dirty
