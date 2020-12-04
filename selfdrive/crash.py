@@ -2,7 +2,6 @@
 import os
 import sys
 import threading
-import capnp
 import traceback
 
 from selfdrive.version import version, dirty
@@ -41,17 +40,15 @@ else:
   client = Client('https://ee3dca66da104ef388e010fcefbd06c6:df79d17e3a0743c387d4cbf05932abde@o484202.ingest.sentry.io/5537090',
                   install_sys_hook=False, transport=HTTPTransport, release=version, tags=error_tags)
   def save_exception(exc_text):
-    log_file = '{}/{}'.format(CRASHES_DIR, datetime.now().strftime('%d-%m-%Y--%I:%M.%S-%p.log'))
+    log_file = '{}/{}'.format(CRASHES_DIR, datetime.now().strftime('%m-%d-%Y--%I:%M.%S-%p.log'))
     with open(log_file, 'w') as f:
       f.write(exc_text)
     print('Logged current crash to {}'.format(log_file))
 
   def capture_exception(*args, **kwargs):
     save_exception(traceback.format_exc())
-    exc_info = sys.exc_info()
-    if not exc_info[0] is capnp.lib.capnp.KjException:
-      client.captureException(*args, **kwargs)
-    cloudlog.error("crash", exc_info=kwargs.get('exc_info', 1))
+    client.captureException(*args, **kwargs)
+    cloudlog.error("crash", exc_info=kwargs.get('exc_info', sys.exc_info()))
 
   def bind_user(**kwargs):
     client.user_context(kwargs)
