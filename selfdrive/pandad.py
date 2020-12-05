@@ -31,7 +31,8 @@ def set_panda_power(power=True):
 
 
 def get_firmware_fn():
-  signed_fn = os.path.join(BASEDIR, "board", "obj", "panda.bin.signed")
+  obj_path = os.path.join(BASEDIR, "board", "obj")
+  signed_fn = os.path.join(obj_path, "panda.bin.signed")
   if os.path.exists(signed_fn):
     cloudlog.info("Using prebuilt signed firmware")
     return signed_fn
@@ -42,6 +43,9 @@ def get_firmware_fn():
 
     if OP_PARAMS.get(ENABLE_UNSAFE_STEERING_RATE):
       mk += " UNSAFE_TORQUE_RATE=1"
+
+    if not os.path.exists(obj_path):
+      os.makedirs(obj_path)
 
     build_st(fn, mk, clean=False)
     return os.path.join(BASEDIR, "board", fn)
