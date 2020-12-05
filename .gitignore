@@ -90,3 +90,4 @@ panda/nosetest.xml
 !phonelibs/android_frameworks_native/**
 !phonelibs/android_hardware_libhardware/**
 !phonelibs/android_system_core/**
+!**/.placeholder
