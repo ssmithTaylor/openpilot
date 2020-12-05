@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <assert.h>
+#include <math.h>
 #include <poll.h>
 #include <sys/mman.h>
 
@@ -20,7 +21,7 @@ extern volatile sig_atomic_t do_exit;
 int write_param_float(float param, const char* param_name, bool persistent_param) {
   char s[16];
   int size = snprintf(s, sizeof(s), "%f", param);
-  return write_db_value(param_name, s, size < sizeof(s) ? size : sizeof(s), persistent_param);
+  return Params(persistent_param).write_db_value(param_name, s, size < sizeof(s) ? size : sizeof(s));
 }
 
 void ui_init(UIState *s) {
@@ -173,10 +174,21 @@ void update_sockets(UIState *s) {
   }
   if (sm.updated("modelV2")) {
     scene.model = sm["modelV2"].getModelV2();
-    // TODO is this indexing allowed
     scene.max_distance = fmin(scene.model.getPosition().getX()[TRAJECTORY_SIZE - 1], MAX_DRAW_DISTANCE);
     for (int ll_idx = 0; ll_idx < 4; ll_idx++) {
-      scene.lane_line_probs[ll_idx] = scene.model.getLaneLineProbs()[ll_idx];
+      if (scene.model.getLaneLineProbs().size() > ll_idx) {
+        scene.lane_line_probs[ll_idx] = scene.model.getLaneLineProbs()[ll_idx];
+      } else {
+        scene.lane_line_probs[ll_idx] = 0.0;
+      }
+    }
+
+    for (int re_idx = 0; re_idx < 2; re_idx++) {
+      if (scene.model.getRoadEdgeStds().size() > re_idx) {
+        scene.road_edge_stds[re_idx] = scene.model.getRoadEdgeStds()[re_idx];
+      } else {
+        scene.road_edge_stds[re_idx] = 1.0;
+      }
     }
   }
   if (sm.updated("uiLayoutState")) {
@@ -213,16 +225,17 @@ void update_sockets(UIState *s) {
   } else if ((sm.frame - sm.rcv_frame("dMonitoringState")) > UI_FREQ/2) {
     scene.frontview = false;
   }
-
-#ifdef QCOM2 // TODO: use this for QCOM too
   if (sm.updated("sensorEvents")) {
     for (auto sensor : sm["sensorEvents"].getSensorEvents()) {
       if (sensor.which() == cereal::SensorEventData::LIGHT) {
         s->light_sensor = sensor.getLight();
+      } else if (!s->started && sensor.which() == cereal::SensorEventData::ACCELERATION) {
+        s->accel_sensor = sensor.getAcceleration().getV()[2];
+      } else if (!s->started && sensor.which() == cereal::SensorEventData::GYRO_UNCALIBRATED) {
+        s->gyro_sensor = sensor.getGyroUncalibrated().getV()[1];
       }
     }
   }
-#endif
 
   s->started = scene.thermal.getStarted() || scene.frontview;
 }
@@ -237,6 +250,7 @@ void ui_update(UIState *s) {
     s->status = STATUS_OFFROAD;
     s->active_app = cereal::UiLayoutState::App::HOME;
     s->scene.uilayout_sidebarcollapsed = false;
+    s->sound->stop();
   } else if (s->started && s->status == STATUS_OFFROAD) {
     s->status = STATUS_DISENGAGED;
     s->started_frame = s->sm->frame;

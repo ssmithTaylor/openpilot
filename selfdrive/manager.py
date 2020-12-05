@@ -13,13 +13,13 @@ from typing import Dict, List
 from selfdrive.swaglog import cloudlog, add_logentries_handler
 
 
-from common.basedir import BASEDIR, PARAMS
+from common.basedir import BASEDIR
 from common.hardware import HARDWARE, ANDROID, PC
 WEBCAM = os.getenv("WEBCAM") is not None
 sys.path.append(os.path.join(BASEDIR, "pyextra"))
 os.environ['BASEDIR'] = BASEDIR
 
-TOTAL_SCONS_NODES = 1005
+TOTAL_SCONS_NODES = 1040
 prebuilt = os.path.exists(os.path.join(BASEDIR, 'prebuilt'))
 
 # Create folders needed for msgq
@@ -78,8 +78,10 @@ import traceback
 from multiprocessing import Process
 
 # Run scons
-spinner = Spinner(noop=(__name__ != "__main__" or not ANDROID))
+spinner = Spinner()
 spinner.update("0")
+if __name__ != "__main__":
+  spinner.close()
 
 if not prebuilt:
   for retry in [True, False]:
@@ -105,8 +107,7 @@ if not prebuilt:
         prefix = b'progress: '
         if line.startswith(prefix):
           i = int(line[len(prefix):])
-          if spinner is not None:
-            spinner.update("%d" % (70.0 * (i / TOTAL_SCONS_NODES)))
+          spinner.update("%d" % (70.0 * (i / TOTAL_SCONS_NODES)))
         elif len(line):
           compile_output.append(line)
           print(line.decode('utf8', 'replace'))
@@ -125,7 +126,8 @@ if not prebuilt:
             print("....%d" % i)
             time.sleep(1)
           subprocess.check_call(["scons", "-c"], cwd=BASEDIR, env=env)
-          shutil.rmtree("/tmp/scons_cache")
+          shutil.rmtree("/tmp/scons_cache", ignore_errors=True)
+          shutil.rmtree("/data/scons_cache", ignore_errors=True)
         else:
           print("scons build failed after retry")
           sys.exit(1)
@@ -138,11 +140,10 @@ if not prebuilt:
         cloudlog.error("scons build failed\n" + error_s)
 
         # Show TextWindow
-        no_ui = __name__ != "__main__" or not ANDROID
+        spinner.close()
         error_s = "\n \n".join(["\n".join(textwrap.wrap(e, 65)) for e in errors])
-        with TextWindow("openpilot failed to build\n \n" + error_s, noop=no_ui) as t:
+        with TextWindow("openpilot failed to build\n \n" + error_s) as t:
           t.wait_for_exit()
-
         exit(1)
     else:
       break
@@ -208,9 +209,6 @@ interrupt_processes: List[str] = []
 # processes to end with SIGKILL instead of SIGTERM
 kill_processes = ['sensord']
 
-# processes to end if thermal conditions exceed Green parameters
-green_temp_processes = ['uploader']
-
 persistent_processes = [
   'thermald',
   'logmessaged',
@@ -224,6 +222,7 @@ if not PC:
     'updated',
     'logcatd',
     'tombstoned',
+    'sensord',
   ]
 
 car_started_processes = [
@@ -254,7 +253,6 @@ if WEBCAM:
 if not PC:
   car_started_processes += [
     'ubloxd',
-    'sensord',
     'dmonitoringd',
     'dmonitoringmodeld',
   ]
@@ -374,11 +372,8 @@ def kill_managed_process(name):
         join_process(running[name], 15)
         if running[name].exitcode is None:
           cloudlog.critical("unkillable process %s failed to die!" % name)
-          # TODO: Use method from HARDWARE
-          if ANDROID:
-            cloudlog.critical("FORCE REBOOTING PHONE!")
-            os.system("date >> /sdcard/unkillable_reboot")
-            os.system("reboot")
+          os.system("date >> /sdcard/unkillable_reboot")
+          HARDWARE.reboot()
           raise RuntimeError
       else:
         cloudlog.info("killing %s with SIGKILL" % name)
@@ -401,8 +396,10 @@ def cleanup_all_processes(signal, frame):
 
 
 def send_managed_process_signal(name, sig):
-  if name not in running or name not in managed_processes:
+  if name not in running or name not in managed_processes or \
+     running[name].exitcode is not None:
     return
+
   cloudlog.info(f"sending signal {sig} to {name}")
   os.kill(running[name].pid, sig)
 
@@ -481,16 +478,6 @@ def manager_thread():
   while 1:
     msg = messaging.recv_sock(thermal_sock, wait=True)
 
-    # heavyweight batch processes are gated on favorable thermal conditions
-    if msg.thermal.thermalStatus >= ThermalStatus.yellow:
-      for p in green_temp_processes:
-        if p in persistent_processes:
-          kill_managed_process(p)
-    else:
-      for p in green_temp_processes:
-        if p in persistent_processes:
-          start_managed_process(p)
-
     if msg.thermal.freeSpace < 0.05:
       logger_dead = True
 
@@ -549,8 +536,6 @@ def uninstall():
   HARDWARE.reboot(reason="recovery")
 
 def main():
-  os.environ['PARAMS_PATH'] = PARAMS
-
   if ANDROID:
     # the flippening!
     os.system('LD_LIBRARY_PATH="" content insert --uri content://settings/system --bind name:s:user_rotation --bind value:i:1')
@@ -621,7 +606,11 @@ if __name__ == "__main__":
     cloudlog.exception("Manager failed to start")
 
     # Show last 3 lines of traceback
-    error = traceback.format_exc(3)
+    error = traceback.format_exc(-3)
+    error = "Manager failed to start\n \n" + error
+    spinner.close()
+    with TextWindow(error) as t:
+      t.wait_for_exit()
 
     error = "Manager failed to start. Press Reset to pull and reset to origin!\n \n" + error
     with TextWindow(error) as t:

@@ -14,24 +14,24 @@ class LatControlINDI():
   def __init__(self, CP, OP=None):
     self.angle_steers_des = 0.
 
-    A = np.matrix([[1.0, DT_CTRL, 0.0],
-                   [0.0, 1.0, DT_CTRL],
-                   [0.0, 0.0, 1.0]])
-    C = np.matrix([[1.0, 0.0, 0.0],
-                   [0.0, 1.0, 0.0]])
+    A = np.array([[1.0, DT_CTRL, 0.0],
+                  [0.0, 1.0, DT_CTRL],
+                  [0.0, 0.0, 1.0]])
+    C = np.array([[1.0, 0.0, 0.0],
+                  [0.0, 1.0, 0.0]])
 
     # Q = np.matrix([[1e-2, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 10.0]])
     # R = np.matrix([[1e-2, 0.0], [0.0, 1e3]])
 
     # (x, l, K) = control.dare(np.transpose(A), np.transpose(C), Q, R)
     # K = np.transpose(K)
-    K = np.matrix([[7.30262179e-01, 2.07003658e-04],
-                   [7.29394177e+00, 1.39159419e-02],
-                   [1.71022442e+01, 3.38495381e-02]])
+    K = np.array([[7.30262179e-01, 2.07003658e-04],
+                  [7.29394177e+00, 1.39159419e-02],
+                  [1.71022442e+01, 3.38495381e-02]])
 
     self.K = K
     self.A_K = A - np.dot(K, C)
-    self.x = np.matrix([[0.], [0.], [0.]])
+    self.x = np.array([[0.], [0.], [0.]])
 
     self.enforce_rate_limit = CP.carName == "toyota"
 
@@ -86,7 +86,7 @@ class LatControlINDI():
     self.alpha = 1. - DT_CTRL / (self.RC + DT_CTRL)
 
     # Update Kalman filter
-    y = np.matrix([[math.radians(CS.steeringAngle)], [math.radians(CS.steeringRate)]])
+    y = np.array([[math.radians(CS.steeringAngle)], [math.radians(CS.steeringRate)]])
     self.x = np.dot(self.A_K, self.x) + np.dot(self.K, y)
 
     indi_log = log.ControlsState.LateralINDIState.new_message()
