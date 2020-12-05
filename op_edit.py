@@ -63,7 +63,7 @@ class opEdit:  # use by running `python /data/openpilot/op_edit.py`
 
       values_list = []
       for k, v in self.params.items():
-        if len(str(v)) < 20:
+        if len(str(v)) < 30 or len(str(v)) <= len('{} ... {}'.format(str(v)[:30], str(v)[-15:])):
           v_color = ''
           if type(v) in self.type_colors:
             v_color = self.type_colors[type(v)]
