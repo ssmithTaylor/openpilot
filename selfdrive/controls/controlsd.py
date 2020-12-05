@@ -14,9 +14,7 @@ from selfdrive.car.car_helpers import get_car, get_startup_event, get_one_can
 from selfdrive.controls.lib.lane_planner import CAMERA_OFFSET
 from selfdrive.controls.lib.drive_helpers import update_v_cruise, initialize_v_cruise, offset_v_cruise, is_toyota
 from selfdrive.controls.lib.longcontrol import LongControl, STARTING_TARGET_SPEED
-from selfdrive.controls.lib.latcontrol_pid import LatControlPID
-from selfdrive.controls.lib.latcontrol_indi import LatControlINDI
-from selfdrive.controls.lib.latcontrol_lqr import LatControlLQR
+from selfdrive.controls.lib.latcontrol_live import LatControlLive
 from selfdrive.controls.lib.events import Events, ET
 from selfdrive.controls.lib.alertmanager import AlertManager
 from selfdrive.controls.lib.vehicle_model import VehicleModel
@@ -44,6 +42,10 @@ EventName = car.CarEvent.EventName
 class Controls:
   def __init__(self, sm=None, pm=None, can_sock=None):
     config_realtime_process(3, Priority.CTRL_HIGH)
+
+    # Setup op params
+    self.opParams = opParams()
+    self.setpoint_offset = 0.0
 
     # Setup sockets
     self.pm = pm
@@ -100,15 +102,10 @@ class Controls:
     self.AM = AlertManager()
     self.events = Events()
 
-    self.LoC = LongControl(self.CP, self.CI.compute_gb)
+    self.LoC = LongControl(self.CP, self.CI.compute_gb, OP=self.opParams)
     self.VM = VehicleModel(self.CP)
 
-    if self.CP.lateralTuning.which() == 'pid':
-      self.LaC = LatControlPID(self.CP)
-    elif self.CP.lateralTuning.which() == 'indi':
-      self.LaC = LatControlINDI(self.CP)
-    elif self.CP.lateralTuning.which() == 'lqr':
-      self.LaC = LatControlLQR(self.CP)
+    self.LaC = LatControlLive(self.CP, OP=self.opParams)
 
     self.state = State.disabled
     self.enabled = False
@@ -148,8 +145,6 @@ class Controls:
     self.rk = Ratekeeper(100, print_delay_threshold=None)
     self.prof = Profiler(False)  # off by default
 
-    self.opParams = opParams()
-    self.setpoint_offset = 0.0
     self.is_toyota = is_toyota(self.CP)
 
   def update_events(self, CS):
@@ -511,11 +506,12 @@ class Controls:
     controlsState.forceDecel = bool(force_decel)
     controlsState.canErrorCounter = self.can_error_counter
 
-    if self.CP.lateralTuning.which() == 'pid':
+
+    if self.LaC.ctrl_type == 'pid':
       controlsState.lateralControlState.pidState = lac_log
-    elif self.CP.lateralTuning.which() == 'lqr':
+    elif self.LaC.ctrl_type == 'lqr':
       controlsState.lateralControlState.lqrState = lac_log
-    elif self.CP.lateralTuning.which() == 'indi':
+    elif self.LaC.ctrl_type == 'indi':
       controlsState.lateralControlState.indiState = lac_log
     self.pm.send('controlsState', dat)
 

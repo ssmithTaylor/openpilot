@@ -40,14 +40,15 @@ class Param:
           return False
       return True
     else:
-      return type(value) in self.allowed_types
+      return type(value) in self.allowed_types or value in self.allowed_types
 
   def _create_attrs(self):  # Create attributes and check Param is valid
     self.has_allowed_types = isinstance(self.allowed_types, list) and len(self.allowed_types) > 0
     self.has_description = self.description is not None
     self.is_list = list in self.allowed_types
+    self.is_bool = bool in self.allowed_types
     if self.has_allowed_types:
-      assert type(self.default) in self.allowed_types, 'Default value type must be in specified allowed_types!'
+      assert type(self.default) in self.allowed_types or self.default in self.allowed_types, 'Default value type must be in specified allowed_types!'
 
       if self.is_list:
         for v in self.default:
@@ -71,16 +72,20 @@ class opParams:
     """
 
     VT = ValueTypes()
-    self.fork_params = {'camera_offset': Param(0.06, VT.number, 'Your camera offset to use in lane_planner.py', live=True),
-                        'indi_inner_gain': Param(9.0, VT.number, live=True),
-                        'indi_outer_gain': Param(8.9, VT.number, live=True),
-                        'indi_time_constant': Param(5.5, VT.number, live=True),
-                        'indi_actuator_effectiveness': Param(9.0, VT.number, live=True),
-                        'steer_actuator_delay': Param(0.60, VT.number, live=True),
+    self.fork_params = {CAM_OFFSET: Param(0.06, VT.number, 'Your camera offset to use in lane_planner.py', live=True),
+                        'indi_inner_gain': Param(9.0, VT.number, live=True, depends_on=SHOW_INDI_PARAMS),
+                        'indi_outer_gain': Param(8.9, VT.number, live=True, depends_on=SHOW_INDI_PARAMS),
+                        'indi_time_constant': Param(5.5, VT.number, live=True, depends_on=SHOW_INDI_PARAMS),
+                        'indi_actuator_effectiveness': Param(9.0, VT.number, live=True, depends_on=SHOW_INDI_PARAMS),
+                        SHOW_ACTUATOR_DELAY_PARAMS: Param(False, bool, live=True, depends_on=ENABLE_LAT_PARAMS),
+                        STEER_ACTUATOR_DELAY: Param(0.60, VT.number, live=True, depends_on=SHOW_ACTUATOR_DELAY_PARAMS),
+                        ENABLE_ACTUATOR_DELAY_BPS: Param(False, bool, live=True, depends_on=SHOW_ACTUATOR_DELAY_PARAMS),
+                        STEER_ACTUATOR_DELAY_BP: Param([0.], [list, float, int], live=True, depends_on=ENABLE_ACTUATOR_DELAY_BPS),
+                        STEER_ACTUATOR_DELAY_V: Param([0.6], [list, float, int], live=True, depends_on=ENABLE_ACTUATOR_DELAY_BPS),
                         'alca_nudge_required': Param(False, bool, 'Whether to wait for applied torque to the wheel (nudge) before making lane changes. '
                                                                  'If False, lane change will occur IMMEDIATELY after signaling'),
                         'alca_min_speed': Param(20.0, VT.number, 'The minimum speed allowed for an automatic lane change (in MPH)'),
-                        ENABLE_COASTING: Param(False, bool, 'When true the car will try to coast down hills instead of braking.', live=True),
+                        ENABLE_COASTING: Param(False, bool, 'When true the car will try to coast down hills instead of braking.', live=True, depends_on=SHOW_EXPERIMENTAL_OPTS),
                         COAST_SPEED: Param(10.0, VT.number, 'The amount of speed to coast by before applying the brakes. Unit: MPH',
                                           live=True, depends_on=ENABLE_COASTING),
                         SETPOINT_OFFSET: Param(0, int, 'The difference between the car\'s set cruise speed and OP\'s. Unit: MPH', live=True),
@@ -98,7 +103,17 @@ class opParams:
                         ENABLE_BRAKE_PARAMS: Param(False, bool, live=True, depends_on=ENABLE_LONG_PARAMS),
                         BRAKE_MAX_BP: Param([0., 20, 33], [list, float, int], live=True, depends_on=ENABLE_BRAKE_PARAMS),
                         BRAKE_MAX_V: Param([0.5, 0.5, 0.5], [list, float], live=True, depends_on=ENABLE_BRAKE_PARAMS),
-                        INDI_SHOW_BREAKPOINTS: Param(False, bool, live=True),
+                        ENABLE_LONG_PID_PARAMS: Param(False, bool, live=True, depends_on=ENABLE_LONG_PARAMS),
+                        LONG_PID_KP_BP: Param([0., 5., 35.], [list, float, int], live=True, depends_on=ENABLE_LONG_PID_PARAMS),
+                        LONG_PID_KP_V: Param([3.6, 2.4, 1.5], [list, float, int], live=True, depends_on=ENABLE_LONG_PID_PARAMS),
+                        LONG_PID_KI_BP: Param([0., 35.], [list, float, int], live=True, depends_on=ENABLE_LONG_PID_PARAMS),
+                        LONG_PID_KI_V: Param([0.54, 0.36], [list, float, int], live=True, depends_on=ENABLE_LONG_PID_PARAMS),
+                        LONG_PID_KF: Param(1., VT.number, live=True, depends_on=ENABLE_LONG_PID_PARAMS),
+                        LONG_PID_SAT_LIMIT: Param(0.8, VT.number, live=True, depends_on=ENABLE_LONG_PID_PARAMS),
+                        ENABLE_LONG_DEADZONE_PARAMS: Param(False, bool, live=True, depends_on=ENABLE_LONG_PARAMS),
+                        LONG_DEADZONE_BP: Param([0., 9.], [list, float, int], live=True, depends_on=ENABLE_LONG_DEADZONE_PARAMS),
+                        LONG_DEADZONE_V: Param([0., .15], [list, float, int], live=True, depends_on=ENABLE_LONG_DEADZONE_PARAMS),
+                        INDI_SHOW_BREAKPOINTS: Param(False, bool, live=True, depends_on=SHOW_INDI_PARAMS),
                         'indi_use_vego_breakpoints': Param(False, bool, live=True, depends_on=INDI_SHOW_BREAKPOINTS),
                         'indi_use_steer_angle_breakpoints': Param(False, bool, live=True, depends_on=INDI_SHOW_BREAKPOINTS),
                         'indi_inner_gain_bp': Param([0, 255, 255], [list, float, int], live=True, depends_on=INDI_SHOW_BREAKPOINTS),
@@ -110,13 +125,38 @@ class opParams:
                         'indi_actuator_effectiveness_bp': Param([0, 255, 255], [list, float, int], live=True, depends_on=INDI_SHOW_BREAKPOINTS),
                         'indi_actuator_effectiveness_v': Param([6, 6, 6], [list, float, int], live=True, depends_on=INDI_SHOW_BREAKPOINTS),
                         SHOW_A_CRUISE: Param(False, bool, live=True),
-                        'a_cruise_min_bp': Param([0.0, 5.0, 10.0, 20.0, 55.0], [list, float], live=True, depends_on=SHOW_A_CRUISE),
-                        'a_cruise_min_v': Param([-1.0, -0.7, -0.6, -0.5, -0.3], [list, float], live=True, depends_on=SHOW_A_CRUISE),
-                        'a_cruise_min_v_following': Param([-3.0, -2.5, -2.0, -1.5, -1.0], [list, float], live=True, depends_on=SHOW_A_CRUISE),
-                        'a_cruise_max_bp': Param([0., 5., 10., 20., 55.], [list, float], live=True, depends_on=SHOW_A_CRUISE),
-                        'a_cruise_max_v': Param([0.8, 0.9, 1.0, 0.4, 0.2], [list, float], live=True, depends_on=SHOW_A_CRUISE),
-                        'a_cruise_max_v_following': Param([1.6, 1.4, 1.4, .7, .3], [list, float], live=True, depends_on=SHOW_A_CRUISE),
-                        ENABLE_UNSAFE_STEERING_RATE: Param(False, bool)}
+                        'a_cruise_min_bp': Param([0., 5.,  10., 20.,  40.], [list, float], live=True, depends_on=SHOW_A_CRUISE),
+                        'a_cruise_min_v': Param([-1.0, -.8, -.67, -.5, -.30], [list, float], live=True, depends_on=SHOW_A_CRUISE),
+                        'a_cruise_min_v_following': Param([-1.0, -.8, -.67, -.5, -.30], [list, float], live=True, depends_on=SHOW_A_CRUISE),
+                        'a_cruise_max_bp': Param([0.,  6.4, 22.5, 40.], [list, float], live=True, depends_on=SHOW_A_CRUISE),
+                        'a_cruise_max_v': Param([1.2, 1.2, 0.65, .4], [list, float], live=True, depends_on=SHOW_A_CRUISE),
+                        'a_cruise_max_v_following': Param([1.6, 1.6, 0.65, .4], [list, float], live=True, depends_on=SHOW_A_CRUISE),
+                        ENABLE_UNSAFE_STEERING_RATE: Param(False, bool, depends_on=SHOW_UNSAFE_OPTS, description='Toyota only.\nThis is HIGHLY unsafe, '
+                                                          'at best, you have less time to react, at worst, you\'ll have steering faults.\nDo NOT use.'),
+                        ENABLE_LAT_PARAMS: Param(False, bool, live=True, description="When true, the lat params set in op_edit."),
+                        WHICH_LAT_CTRL: Param('indi', ['pid', 'indi', 'lqr'], live=True, depends_on= ENABLE_LAT_PARAMS, description='Which lat controller to use, '
+                                              'options are pid, indi, or lqr.'),
+                        SHOW_LQR_PARAMS: Param(False, [bool], live=True, depends_on=ENABLE_LAT_PARAMS),
+                        LQR_SCALE: Param(1500.0, VT.number, live=True, depends_on=SHOW_LQR_PARAMS),
+                        LQR_KI: Param(0.05, VT.number, live=True, depends_on=SHOW_LQR_PARAMS),
+                        LQR_A: Param([0., 1., -0.22619643, 1.21822268], [list, float, int], live=True, depends_on=SHOW_LQR_PARAMS),
+                        LQR_B: Param([-1.92006585e-04, 3.95603032e-05], [list, float, int], live=True, depends_on=SHOW_LQR_PARAMS),
+                        LQR_C: Param([1., 0.], [list, float, int], live=True, depends_on=SHOW_LQR_PARAMS),
+                        LQR_K: Param([-110.73572306, 451.22718255], [list, float, int], live=True, depends_on=SHOW_LQR_PARAMS),
+                        LQR_L: Param([0.3233671, 0.3185757], [list, float, int], live=True, depends_on=SHOW_LQR_PARAMS),
+                        LQR_DC_GAIN: Param(0.002237852961363602, VT.number, live=True, depends_on=SHOW_LQR_PARAMS),
+                        STEER_LIMIT_TIMER: Param(0.4, VT.number, live=True, depends_on=ENABLE_LAT_PARAMS),
+                        SHOW_LAT_PID_PARAMS: Param(False, [bool], live=True, depends_on=ENABLE_LAT_PARAMS),
+                        LAT_PID_KP_BP: Param([0., 5., 35.], [list, float, int], live=True, depends_on=SHOW_LAT_PID_PARAMS),
+                        LAT_PID_KP_V: Param([3.6, 2.4, 1.5], [list, float, int], live=True, depends_on=SHOW_LAT_PID_PARAMS),
+                        LAT_PID_KI_BP: Param([0., 35.], [list, float, int], live=True, depends_on=SHOW_LAT_PID_PARAMS),
+                        LAT_PID_KI_V: Param([0.54, 0.36], [list, float, int], live=True, depends_on=SHOW_LAT_PID_PARAMS),
+                        LAT_PID_KF: Param(1., VT.number, live=True, depends_on=SHOW_LAT_PID_PARAMS),
+                        SHOW_INDI_PARAMS: Param(False, [bool], live=True, depends_on=ENABLE_LAT_PARAMS),
+                        SHOW_UNSAFE_OPTS: Param(False, [bool], live=True, description='Shows options for unsafe / dangerous features. '
+                                                'If any of these are enabled, prepare for the worst: no steering, no gas / brake, etc.'),
+                        SHOW_EXPERIMENTAL_OPTS: Param(False, [bool], live=True, description='Shows options for experimental, unfinished, features. '
+                                                      'Generally you should never use these.')}
 
     self._params_file = '/data/op_params.json'
     self._backup_file = '/data/op_params_corrupt.json'
@@ -254,6 +294,7 @@ class opParams:
         print("Unable to write file: " + str(e))
         return False
 
+CAM_OFFSET = 'camera_offset'
 
 ENABLE_UNSAFE_STEERING_RATE = "enable_unsafe_steering_rate"
 
@@ -264,6 +305,7 @@ DOWNHILL_INCLINE = "downhill_incline"
 ALWAYS_EVAL_COAST = "always_eval_coast_plan"
 EVAL_COAST_LONG = "eval_coast_long_controller"
 
+SHOW_INDI_PARAMS = 'show_indi_params'
 INDI_SHOW_BREAKPOINTS = 'indi_show_breakpoint_opts'
 
 SHOW_A_CRUISE = 'a_cruise_show_opts'
@@ -275,3 +317,43 @@ GAS_MAX_V = 'gas_max_v'
 ENABLE_BRAKE_PARAMS = 'enable_brake_params'
 BRAKE_MAX_BP = 'brake_max_bp'
 BRAKE_MAX_V = 'brake_max_v'
+ENABLE_LONG_PID_PARAMS = 'enable_long_pid_params'
+LONG_PID_KP_BP = 'long_pid_kp_bp'
+LONG_PID_KP_V = 'long_pid_kp_v'
+LONG_PID_KI_BP = 'long_pid_ki_bp'
+LONG_PID_KI_V = 'long_pid_ki_v'
+LONG_PID_KF = 'long_pid_kf'
+LONG_PID_SAT_LIMIT = 'long_pid_sat_limit'
+ENABLE_LONG_DEADZONE_PARAMS = 'enable_long_deadzone_params'
+LONG_DEADZONE_BP = 'long_deadzone_bp'
+LONG_DEADZONE_V = 'long_deadzone_v'
+
+ENABLE_LAT_PARAMS = 'enable_lat_params'
+WHICH_LAT_CTRL = 'which_lat_controller'
+
+SHOW_LQR_PARAMS = 'show_lqr_params'
+LQR_SCALE = 'lqr_scale'
+LQR_KI = 'lqr_ki'
+LQR_A = 'lqr_a'
+LQR_B = 'lqr_b'
+LQR_C = 'lqr_c'
+LQR_K = 'lqr_k'
+LQR_L = 'lqr_l'
+LQR_DC_GAIN = 'lqr_dc_gain'
+STEER_LIMIT_TIMER = 'steer_limit_timer'
+
+SHOW_ACTUATOR_DELAY_PARAMS = "show_actuator_delay_params"
+STEER_ACTUATOR_DELAY = 'steer_actuator_delay'
+ENABLE_ACTUATOR_DELAY_BPS = 'enable_actuator_delay_breakpoints'
+STEER_ACTUATOR_DELAY_BP = 'steer_actuator_delay_bp'
+STEER_ACTUATOR_DELAY_V = 'steer_actuator_delay_v'
+
+SHOW_LAT_PID_PARAMS = 'show_lat_pid_params'
+LAT_PID_KP_BP = 'lat_pid_kp_bp'
+LAT_PID_KP_V = 'lat_pid_kp_v'
+LAT_PID_KI_BP = 'lat_pid_ki_bp'
+LAT_PID_KI_V = 'lat_pid_ki_v'
+LAT_PID_KF = 'lat_pid_kf'
+
+SHOW_UNSAFE_OPTS = 'show_unsafe_options'
+SHOW_EXPERIMENTAL_OPTS = 'show_experimental_options'

@@ -1,6 +1,7 @@
 op_edit.py
 common/colors.py
 common/op_params.py
+selfdrive/controls/lib/latcontrol_live.py
 
 .gitignore
 LICENSE

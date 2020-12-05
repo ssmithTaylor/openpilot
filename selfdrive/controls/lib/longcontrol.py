@@ -1,7 +1,10 @@
 from cereal import log
 from common.numpy_fast import clip, interp
 from selfdrive.controls.lib.pid import PIController
-from common.op_params import opParams, ENABLE_COASTING, EVAL_COAST_LONG, ENABLE_LONG_PARAMS, GAS_MAX_BP, GAS_MAX_V, ENABLE_BRAKE_PARAMS, ENABLE_GAS_PARAMS, BRAKE_MAX_BP, BRAKE_MAX_V
+from common.op_params import opParams, ENABLE_COASTING, EVAL_COAST_LONG, ENABLE_LONG_PARAMS, \
+                              GAS_MAX_BP, GAS_MAX_V, ENABLE_BRAKE_PARAMS, ENABLE_GAS_PARAMS, BRAKE_MAX_BP, BRAKE_MAX_V, \
+                              ENABLE_LONG_PID_PARAMS, LONG_PID_KP_BP, LONG_PID_KP_V, LONG_PID_KI_BP, LONG_PID_KI_V, \
+                              ENABLE_LONG_DEADZONE_PARAMS, LONG_DEADZONE_BP, LONG_DEADZONE_V, LONG_PID_KF, LONG_PID_SAT_LIMIT
 
 LongCtrlState = log.ControlsState.LongControlState
 Source = log.Plan.LongitudinalPlanSource
@@ -54,16 +57,28 @@ def long_control_state_trans(active, long_control_state, v_ego, v_target, v_pid,
 
 
 class LongControl():
-  def __init__(self, CP, compute_gb):
+  def __init__(self, CP, compute_gb, OP=None):
     self.long_control_state = LongCtrlState.off  # initialized to off
+
+    if OP is None:
+      OP = opParams()
+    self.op_params = OP
+
     self.pid = PIController((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
                             (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV),
                             rate=RATE,
                             sat_limit=0.8,
-                            convert=compute_gb)
+                            convert=compute_gb,
+                            p_bp_key=LONG_PID_KP_BP,
+                            p_v_key=LONG_PID_KP_V,
+                            i_bp_key=LONG_PID_KI_BP,
+                            i_v_key=LONG_PID_KI_V,
+                            f_key=LONG_PID_KF,
+                            sat_key=LONG_PID_SAT_LIMIT,
+                            OP=self.op_params,
+                            use_ops=lambda op: op.get(ENABLE_LONG_PARAMS) and op.get(ENABLE_LONG_PID_PARAMS))
     self.v_pid = 0.0
     self.last_output_gb = 0.0
-    self.op_params = opParams()
 
   def reset(self, v_pid):
     """Reset PID controller and change setpoint"""
@@ -77,6 +92,8 @@ class LongControl():
     gm_v = CP.gasMaxV
     bm_bp = CP.brakeMaxBP
     bm_v = CP.brakeMaxV
+    dz_bp = CP.longitudinalTuning.deadzoneBP
+    dz_v = CP.longitudinalTuning.deadzoneV
 
     if self.op_params.get(ENABLE_LONG_PARAMS):
       if self.op_params.get(ENABLE_GAS_PARAMS):
@@ -85,6 +102,9 @@ class LongControl():
       if self.op_params.get(ENABLE_BRAKE_PARAMS):
         bm_bp = self.op_params.get(BRAKE_MAX_BP)
         bm_v = self.op_params.get(BRAKE_MAX_V)
+      if self.op_params.get(ENABLE_LONG_DEADZONE_PARAMS):
+        dz_bp = self.op_params.get(LONG_DEADZONE_BP)
+        dz_v = self.op_params.get(LONG_DEADZONE_V)
 
     gas_max = interp(CS.vEgo, gm_bp, gm_v)
     brake_max = interp(CS.vEgo, bm_bp, bm_v)
@@ -123,7 +143,7 @@ class LongControl():
       # Toyota starts braking more when it thinks you want to stop
       # Freeze the integrator so we don't accelerate to compensate, and don't allow positive acceleration
       prevent_overshoot = not CP.stoppingControl and CS.vEgo < 1.5 and v_target_future < 0.7
-      deadzone = interp(v_ego_pid, CP.longitudinalTuning.deadzoneBP, CP.longitudinalTuning.deadzoneV)
+      deadzone = interp(v_ego_pid, dz_bp, dz_v)
 
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
 

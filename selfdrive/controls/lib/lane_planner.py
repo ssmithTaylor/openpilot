@@ -1,9 +1,10 @@
 from common.numpy_fast import interp
-from common.op_params import opParams
+from common.op_params import opParams, CAM_OFFSET
 import numpy as np
 from cereal import log
 
-CAMERA_OFFSET = 0.06  # m from center car to camera
+STANDARD_CAMERA_OFFSET = 0.06  # m from center car to camera
+CAMERA_OFFSET = STANDARD_CAMERA_OFFSET
 
 
 def compute_path_pinv(l=50):
@@ -85,10 +86,12 @@ class LanePlanner():
       self.r_lane_change_prob = md.meta.desireState[log.PathPlan.Desire.laneChangeRight]
 
   def update_d_poly(self, v_ego):
-    CAMERA_OFFSET = self.op_params.get('camera_offset')
+    CAMERA_OFFSET = self.op_params.get(CAM_OFFSET)
     # only offset left and right lane lines; offsetting p_poly does not make sense
     self.l_poly[3] += CAMERA_OFFSET
     self.r_poly[3] += CAMERA_OFFSET
+    if CAMERA_OFFSET != STANDARD_CAMERA_OFFSET:
+      self.p_poly[3] += CAMERA_OFFSET - STANDARD_CAMERA_OFFSET
 
     # Find current lanewidth
     self.lane_width_certainty += 0.05 * (self.l_prob * self.r_prob - self.lane_width_certainty)
