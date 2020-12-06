@@ -91,8 +91,8 @@ class opParams:
                         SETPOINT_OFFSET: Param(0, int, 'The difference between the car\'s set cruise speed and OP\'s. Unit: MPH', live=True),
                         DOWNHILL_INCLINE: Param(-1, VT.number, 'If the angle between the current road and the future predicted road is less than this value, '
                                                               'the car will try to coast downhill. Unit: degrees', live=True, depends_on=ENABLE_COASTING),
-                        'corolla_use_indi': Param(False, bool),
-                        'accel_hyst_gap': Param(0.02, VT.number, live=True),
+                        'corolla_use_indi': Param(False, bool, depends_on=SHOW_TOYOTA_OPTS),
+                        'accel_hyst_gap': Param(0.02, VT.number, live=True, depends_on=SHOW_TOYOTA_OPTS),
                         ALWAYS_EVAL_COAST: Param(False, bool, live=True, depends_on=ENABLE_COASTING),
                         EVAL_COAST_LONG: Param(False, bool, live=True, depends_on=ENABLE_COASTING),
                         ENABLE_LONG_PARAMS: Param(False, bool, live=True, description='When true the long controller will used the params in opParam '
@@ -156,7 +156,9 @@ class opParams:
                         SHOW_UNSAFE_OPTS: Param(False, [bool], live=True, description='Shows options for unsafe / dangerous features. '
                                                 'If any of these are enabled, prepare for the worst: no steering, no gas / brake, etc.'),
                         SHOW_EXPERIMENTAL_OPTS: Param(False, [bool], live=True, description='Shows options for experimental, unfinished, features. '
-                                                      'Generally you should never use these.')}
+                                                      'Generally you should never use these.'),
+                        SHOW_TOYOTA_OPTS: Param(False, [bool], live=True, description='Shows options toyota cars.'),
+                        COROLLA_BODY_TYPE: Param('sedan', ['sedan', 'hatchback'], depends_on=SHOW_TOYOTA_OPTS)}
 
     self._params_file = '/data/op_params.json'
     self._backup_file = '/data/op_params_corrupt.json'
@@ -357,3 +359,6 @@ LAT_PID_KF = 'lat_pid_kf'
 
 SHOW_UNSAFE_OPTS = 'show_unsafe_options'
 SHOW_EXPERIMENTAL_OPTS = 'show_experimental_options'
+
+SHOW_TOYOTA_OPTS = 'show_toyota_options'
+COROLLA_BODY_TYPE = 'corolla_body_type'
