@@ -26,7 +26,7 @@ int write_param_float(float param, const char* param_name, bool persistent_param
 
 void ui_init(UIState *s) {
   s->sm = new SubMaster({"modelV2", "controlsState", "uiLayoutState", "liveCalibration", "radarState", "thermal",
-                         "health", "carParams", "ubloxGnss", "driverState", "dMonitoringState", "sensorEvents", "carState", "liveMpc", "gpsLocationExternal"});
+                         "health", "carParams", "ubloxGnss", "driverState", "dMonitoringState", "sensorEvents", "carState", "gpsLocationExternal"});
 
   s->started = false;
   s->status = STATUS_OFFROAD;
@@ -197,15 +197,6 @@ void update_sockets(UIState *s) {
       } else {
         scene.road_edge_stds[re_idx] = 1.0;
       }
-    }
-  }
-  if (sm.updated("liveMpc")) {
-    auto data = sm["liveMpc"].getLiveMpc();
-    auto x_list = data.getX();
-    auto y_list = data.getY();
-    for (int i = 0; i < 50; i++){
-      scene.mpc_x[i] = x_list[i];
-      scene.mpc_y[i] = y_list[i];
     }
   }
   if (sm.updated("uiLayoutState")) {
