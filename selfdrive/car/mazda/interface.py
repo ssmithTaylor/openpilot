@@ -21,7 +21,7 @@ class CarInterface(CarInterfaceBase):
     ret.carName = "mazda"
     ret.safetyModel = car.CarParams.SafetyModel.mazda
 
-    ret.dashcamOnly = True
+    #ret.dashcamOnly = True
 
     ret.radarOffCan = True
 
@@ -34,9 +34,15 @@ class CarInterface(CarInterfaceBase):
       ret.mass = 3655 * CV.LB_TO_KG + STD_CARGO_KG
       ret.wheelbase = 2.7
       ret.steerRatio = 15.5
-      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.19], [0.019]]
-      ret.lateralTuning.pid.kf = 0.00006
+      #ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
+      #ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.19], [0.019]]
+      #ret.lateralTuning.pid.kf = 0.00006
+      ret.lateralTuning.init('indi')
+      ret.lateralTuning.indi.innerLoopGain = 4.0
+      ret.lateralTuning.indi.outerLoopGainBP = [0]
+      ret.lateralTuning.indi.outerLoopGainV = [3.0]
+      ret.lateralTuning.indi.timeConstant = 0.1
+      ret.lateralTuning.indi.actuatorEffectiveness = 1.0
     elif candidate == CAR.CX9:
       ret.mass = 4217 * CV.LB_TO_KG + STD_CARGO_KG
       ret.wheelbase = 3.1
@@ -83,8 +89,8 @@ class CarInterface(CarInterfaceBase):
     # events
     events = self.create_common_events(ret)
 
-    if self.CS.low_speed_lockout:
-      events.add(EventName.belowEngageSpeed)
+    #if self.CS.low_speed_lockout:
+    #  events.add(EventName.belowEngageSpeed)
 
     if self.CS.low_speed_alert:
       events.add(EventName.belowSteerSpeed)
